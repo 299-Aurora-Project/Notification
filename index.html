@@ -215,16 +215,33 @@ if ('serviceWorker' in navigator) {
 }
 
 /* 通知ロジック */
+/* v t1.1.1 */
 async function testNotification() {
+    console.log("Notification button clicked"); // ログ追加
+    
+    if (!("Notification" in window)) {
+        alert("This browser does not support desktop notification");
+        return;
+    }
+
     const permission = await Notification.requestPermission();
+    console.log("Permission status:", permission); // 状況をログに表示
+
     if (permission === "granted") {
-        const registration = await navigator.serviceWorker.ready;
-        registration.showNotification("Aurora Forecast Test", {
-            body: "Notification system is working correctly!",
-            icon: "icon.png"
-        });
+        try {
+            const registration = await navigator.serviceWorker.ready;
+            console.log("SW Ready, attempting to show notification...");
+            await registration.showNotification("Aurora Forecast Test", {
+                body: "Notification system is working correctly!",
+                icon: "icon.png",
+                badge: "icon.png"
+            });
+            console.log("Notification sent to OS");
+        } catch (error) {
+            console.error("Failed to show notification:", error);
+        }
     } else {
-        alert("Please enable notifications in your browser settings.");
+        alert("Permission denied. Please enable notifications in site settings.");
     }
 }
 
@@ -432,3 +449,4 @@ function drawAurora(data) { auroraLayer.clearLayers(); data.coordinates.forEach(
 </script>
 </body>
 </html>
+
