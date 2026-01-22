@@ -4,15 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Aurora Forecast Pro v t1.1.13</title>
-
-<!-- PWA / Notification related -->
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#0b132b">
-<link rel="apple-touch-icon" href="icon.png">
-
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <style>
-/* ====== ORIGINAL v t1.0.31 STYLE (UNCHANGED) ====== */
 body { font-family: system-ui, sans-serif; background:#0b132b; color:#eaeaea; padding:20px; margin:0; }
 .container { max-width:600px; margin: 0 auto; }
 .header-area { display: flex; flex-direction: column; margin-bottom: 10px; }
@@ -25,95 +18,472 @@ h1 { margin: 0; font-size: 1.5rem; }
 .label-main { font-size: 1.1rem; font-weight: bold; color: #5bc0be; margin-bottom: 0px; }
 .label-sub-current { font-size: 0.8rem; color: #8b949e; margin-bottom: 10px; }
 .value { font-size:1.6em; margin-top:4px; min-height: 1.2em; }
-.badge { display:inline-block; padding:10px 24px; border-radius:30px; font-weight:bold; font-size: 1.2rem; }
+.sub-section { margin-top: 15px; padding-top: 15px; border-top: 1px solid #30363d; position: relative; }
+.badge { display:inline-block; padding:10px 24px; border-radius:30px; font-weight:bold; font-size: 1.2rem; letter-spacing: 0.05em; box-shadow: 0 4px 15px rgba(0,0,0,0.3); margin-top: 5px; position: relative; }
 .badge-large { font-size: 1.5rem; }
 .low { background:#475569; } .mid { background:#ca8a04; } .high { background:#dc2626; }
+.cloud-icon { font-size: 0.8em; margin-left: 8px; vertical-align: middle; }
+input, button { margin-top:6px; padding:6px 12px; border-radius: 4px; border: none; font-weight: bold; }
+button { cursor: pointer; background: #3a506b; color: white; transition: 0.2s; font-size: 0.9rem; }
+button:hover:not(:disabled) { background: #5bc0be; color: #0b132b; }
+button:disabled { opacity: 0.3; cursor: not-allowed; }
+#btn-gps { width: auto; min-width: 220px; padding: 10px 20px; margin-bottom: 15px; }
+.search-container { position: relative; display: inline-block; width: 100%; margin-top: 5px; }
+#cityInput { width: calc(100% - 100px); box-sizing: border-box; }
+.autocomplete-items { position: absolute; border: 1px solid #3a506b; border-bottom: none; border-top: none; z-index: 99; top: 100%; left: 0; right: 100px; background-color: #1c2541; border-radius: 0 0 4px 4px; max-height: 200px; overflow-y: auto; }
+.autocomplete-item { padding: 10px; cursor: pointer; border-bottom: 1px solid #30363d; font-size: 0.85rem; }
+.autocomplete-item:hover { background-color: #3a506b; color: #5bc0be; }
+.refresh-btn { position: absolute; top: 15px; right: 15px; font-size: 0.8em; padding: 4px 8px; }
+.sub-refresh-btn { position: absolute; top: 15px; right: 0; font-size: 0.8em; padding: 4px 8px; }
+.last-updated { font-size: 0.65rem; color: #8b949e; text-align: right; margin-top: 4px; font-family: monospace; }
+.refresh-btn + .last-updated { position: absolute; top: 40px; right: 15px; width: auto; }
+.sub-refresh-btn + .last-updated { position: absolute; top: 40px; right: 0; width: auto; }
+.error-msg { color: #ff6b6b; font-size: 0.75rem; margin-top: 5px; min-height: 1em; opacity: 0; transition: 0.3s; }
+.loading-text { opacity: 0.6; font-size: 1rem; color: #8b949e; font-style: normal; }
+.loading-text i { font-style: italic; }
+.loading-btn { pointer-events: none; filter: grayscale(0.5); opacity: 0.7; }
+#hidden-data { display: none; }
+.toggle-btn { width: 100%; margin-bottom: 20px; background: #1c2541; border: 1px solid #3a506b; color: #5bc0be; }
+pre { background:#0b132b; padding:12px; border-radius:8px; font-family: monospace; font-size: 0.85em; overflow-x: auto; white-space: pre-wrap; border: 1px solid #3a506b; min-height: 50px; }
+#welcome-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 30000; display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer; }
+.welcome-box { background: #5bc0be; color: #0b132b; padding: 25px; border-radius: 15px; text-align: center; font-weight: bold; font-size: 1.1rem; z-index: 30001; }
+.arrow-container { display: flex; gap: 15px; margin-bottom: 10px; }
+.thin-arrow { font-size: 2.5rem; color: #5bc0be; font-weight: 100; animation: bounceThin 1.2s infinite; }
+@keyframes bounceThin { 0%, 100% { transform: translateY(0); opacity: 0.5; } 50% { transform: translateY(-15px); opacity: 1; } }
+.modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 20000; justify-content: center; align-items: center; cursor: pointer; }
+.modal-content { background: #1c2541; width: 90%; max-width: 450px; padding: 25px; border-radius: 12px; position: relative; border: 1px solid #5bc0be; line-height: 1.6; cursor: default; max-height: 90vh; overflow-y: auto; }
+.close-modal { position: absolute; top: 10px; right: 15px; font-size: 24px; cursor: pointer; color: #8b949e; }
+.score-big { font-size: 2.5rem; text-align: center; color: #fff; margin: 10px 0; font-weight: bold; }
+.detail-table { width: 100%; font-size: 0.85rem; border-collapse: collapse; margin-top: 10px; margin-bottom: 15px; }
+.detail-table th, .detail-table td { text-align: left; padding: 8px; border-bottom: 1px solid #30363d; }
+#map-screen { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 9999; background: #000; }
+#map { width: 100%; height: 100%; background: #000; }
+#back-btn { position: absolute; top: 90px; left: 10px; z-index: 10000; background: #21262d; border: 1px solid #30363d; color: white; padding: 8px 16px; }
 
-/* ===== Notification UI (from v t1.1.12) ===== */
-.notification-card { border: 1px dashed #5bc0be; }
-.btn-test { background: #ca8a04; }
-.switch { position: relative; display: inline-block; width: 44px; height: 22px; }
+/* Notification Features Styles (From v1.1.12) */
+.notification-card { border: 1px dashed #5bc0be !important; margin-top: 10px; }
+.btn-test { background: #ca8a04 !important; }
+.switch { position: relative; display: inline-block; width: 44px; height: 22px; margin-top: 5px; }
 .switch input { opacity: 0; width: 0; height: 0; }
-.slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
-  background-color: #3a506b; transition: .4s; border-radius: 22px; }
-.slider:before { position: absolute; content: ""; height: 16px; width: 16px;
-  left: 3px; bottom: 3px; background-color: white;
-  transition: .4s; border-radius: 50%; }
+.slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #3a506b; transition: .4s; border-radius: 22px; }
+.slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
 input:checked + .slider { background-color: #5bc0be; }
 input:checked + .slider:before { transform: translateX(22px); }
-.switch-label { font-size: 0.75rem; color: #5bc0be; font-weight: bold; }
+.switch-label { font-size: 0.75rem; color: #5bc0be; white-space: nowrap; font-weight: bold; }
 </style>
 </head>
+<body onkeydown="closeWelcome()" onclick="closeWelcome(); closeAllLists();">
 
-<body>
-
-<div id="home-screen" class="container">
-  <div class="header-area">
-    <div class="title-row">
-      <h1>🌌 Aurora Forecast Pro<span class="beta-suffix">(beta)</span>
-        <span class="version">v t1.1.13</span>
-      </h1>
+<div id="welcome-overlay">
+    <div class="arrow-container">
+        <div class="thin-arrow">↑</div><div class="thin-arrow">↑</div><div class="thin-arrow">↑</div>
     </div>
-    <div class="produce-by">Produce by Shin</div>
-  </div>
-
-  <!-- ===== Notification Settings (ADDED) ===== -->
-  <div class="card notification-card">
-    <div class="label-main" style="font-size:0.9rem;">App Settings</div>
-    <button id="btn-notif-test" class="btn-test" onclick="testNotification();">
-      Send Test Notification (10s delay)
-    </button>
-  </div>
-
-  <!-- ===== Original Main Result Card (layout unchanged) ===== -->
-  <div class="card" id="card-main-result">
-    <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-      <div>
-        <div class="label-main">Overall Probability</div>
-        <div id="total-sub-label" class="label-sub-current">Current:</div>
-      </div>
-      <div style="display:flex; flex-direction:column; align-items:flex-end;">
-        <span class="switch-label">Notification</span>
-        <label class="switch">
-          <input type="checkbox" id="notif-toggle" onchange="handleNotifToggle(this)">
-          <span class="slider"></span>
-        </label>
-      </div>
-    </div>
-    <div id="result" class="badge badge-large low">--</div>
-  </div>
+    <div class="welcome-box">Please enter a location first</div>
 </div>
 
-<script>
-/* ===== Notification Logic (from v t1.1.12) ===== */
+<div id="home-screen" class="container">
+    <div class="header-area">
+        <div class="title-row">
+            <h1>🌌 Aurora Forecast Pro<span class="beta-suffix">(beta)</span> <span class="version">v t1.1.13</span></h1>
+        </div>
+        <div class="produce-by">Produce by Shin</div>
+    </div>
 
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js');
+    <div class="card" id="card-loc">
+        <div class="label-main">Location</div>
+        <div id="loc" class="value">Not Set</div>
+        <button id="btn-gps" onclick="getLocation(); event.stopPropagation();">Get Current Location via GPS</button><br>
+        Search City:
+        <div class="search-container">
+            <input id="cityInput" placeholder="e.g. Fairbanks, AK" oninput="handleCityInput(this)" onclick="event.stopPropagation()">
+            <button id="btn-search" onclick="searchCity(); event.stopPropagation();" disabled>Set</button>
+            <div id="autocomplete-list" class="autocomplete-items"></div>
+        </div>
+        <div id="search-error" class="error-msg">City not found. Please check your input.</div>
+    </div>
+
+    <div class="card notification-card">
+        <div class="label-main" style="font-size: 0.9rem;">Aurora Alert (Beta)</div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
+            <span style="font-size: 0.8rem;">Push Notifications</span>
+            <label class="switch">
+                <input type="checkbox" id="notify-toggle" onchange="toggleNotifications()">
+                <span class="slider"></span>
+            </label>
+        </div>
+        <button class="btn-test" onclick="testNotification()" style="font-size: 0.7rem; margin-top: 10px;">Send Test Alert</button>
+    </div>
+
+    <div class="card" id="card-main-result">
+        <div id="total-label" class="label-main">Overall Probability</div>
+        <div id="total-sub-label" class="label-sub-current">Current:</div>
+        <div id="result" class="badge badge-large low">--</div>
+        <div style="margin-top: 15px;">
+            <button onclick="openModal(); event.stopPropagation();" style="font-size: 0.85em; background: #1c2541; border: 1px solid #3a506b; padding: 8px 16px;">View Details</button>
+        </div>
+        <button id="btn-update-all" class="refresh-btn" onclick="updateAll(); event.stopPropagation();">Update All</button>
+        <div id="time-update-all" class="last-updated"></div>
+    </div>
+
+    <button id="toggle-data-btn" class="toggle-btn" onclick="toggleData(); event.stopPropagation();">Show All Information</button>
+
+    <div id="hidden-data">
+        <div class="card" id="card-oval">
+            <div class="label-main">Aurora Oval</div>
+            <div class="label-sub-current">Current:</div>
+            <div id="oval" class="badge low">--</div>
+            <div id="oval-prob" style="font-size: 0.9rem; color: #8b949e; margin: 10px 0;"></div>
+            <button onclick="showMapScreen(); event.stopPropagation();" style="background: #238636;">View Aurora Map</button>
+            <button id="btn-refresh-oval" class="refresh-btn" onclick="refreshItem('oval'); event.stopPropagation();">Refresh</button>
+            <div id="time-oval" class="last-updated"></div>
+        </div>
+
+        <div class="card" id="card-kp-group">
+            <div class="label-main">Kp Index</div>
+            <div class="label-sub-current">Current:</div>
+            <div id="kp" class="badge low">--</div>
+            <button id="btn-refresh-kp" class="refresh-btn" onclick="refreshItem('kp'); event.stopPropagation();">Refresh</button>
+            <div id="time-kp" class="last-updated"></div>
+            <div class="sub-section" id="card-kp3">
+                <div style="font-size: 0.8rem; color: #8b949e; margin-bottom: 5px;">Short Forecast:</div>
+                <div id="kp-short" class="value" style="font-size: 1rem;">--</div>
+                <pre id="kpForecast" style="margin-top:10px;">--</pre>
+                <button id="btn-refresh-kp3" class="sub-refresh-btn" onclick="refreshItem('kp3'); event.stopPropagation();">Refresh</button>
+                <div id="time-kp3" class="last-updated"></div>
+            </div>
+        </div>
+
+        <div class="card" id="card-cloud-group">
+            <div class="label-main">Cloud Cover</div>
+            <div class="label-sub-current">Current:</div>
+            <div id="cloud" class="badge low">--</div>
+            <button id="btn-refresh-cloud" class="refresh-btn" onclick="refreshItem('cloud'); event.stopPropagation();">Refresh</button>
+            <div id="time-cloud" class="last-updated"></div>
+            <div class="sub-section" id="card-short">
+                <div style="font-size: 0.8rem; color: #8b949e; margin-bottom: 5px;">Short Forecast:</div>
+                <div id="forecast" class="value" style="font-size: 1rem;">--</div>
+                <button id="btn-refresh-short" class="sub-refresh-btn" onclick="refreshItem('short'); event.stopPropagation();">Refresh</button>
+                <div id="time-short" class="last-updated"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="detailModal" class="modal-overlay" onclick="closeModal()">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <span class="close-modal" onclick="closeModal()">&times;</span>
+        <div class="modal-title" id="modal-label-title">Probability Details</div>
+        <div class="score-big"><span id="score-pct">--</span></div>
+        <div style="font-size: 0.85rem; margin-bottom: 15px;">
+            <div style="border: 1px solid #3a506b; border-radius: 8px; padding: 10px; margin-bottom: 15px; background: #0b132b;">
+                <strong style="color: #5bc0be;">Thresholds:</strong>
+                <ul style="margin: 5px 0; padding-left: 20px;">
+                    <li><span style="color: #dc2626;">High</span>: 70% or more</li>
+                    <li><span style="color: #ca8a04;">Possible</span>: 35% to 69%</li>
+                    <li><span style="color: #8b949e;">Low</span>: Under 35%</li>
+                </ul>
+            </div>
+            <strong>Optimized Logic (v t1.0.13+):</strong>
+            <table class="detail-table">
+                <tr><th>Item</th><th>Max</th><th>Details</th></tr>
+                <tr><td>Oval/Horizon</td><td>45</td><td>Base prob + Viewline bonus</td></tr>
+                <tr><td>Magnetic</td><td>40</td><td>Kp Index sensitivity adjusted</td></tr>
+                <tr><td>Sky</td><td>15</td><td>Clear sky impact</td></tr>
+            </table>
+            <p style="margin-top:10px; color: #ffab70; font-size: 0.8rem;">
+                * <strong>Cloud Impact:</strong> If cloud cover exceeds 70%, the score is significantly reduced. If it exceeds 85%, the result is forced to "Low".<br><br>
+                * <strong>Cloud Icon (☁️):</strong> This icon appears <strong>only when</strong> the aurora potential is "Possible" or "High" but the view is currently blocked by heavy cloud cover. If the aurora activity itself is too weak to be seen, the icon will not be shown even if it's cloudy.
+            </p>
+        </div>
+    </div>
+</div>
+
+<div id="map-screen">
+    <button class="btn" id="back-btn" onclick="hideMapScreen();">← Back</button>
+    <div id="map"></div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const CORS = "https://corsproxy.io/?";
+const KP_URL = "https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json";
+const OVAL_URL = "https://services.swpc.noaa.gov/json/ovation_aurora_latest.json";
+const FORECAST_URL = "https://services.swpc.noaa.gov/text/3-day-forecast.txt";
+
+let myLat = null; let myLon = null; let lastAuroraProb = 0; let cachedAuroraData = null;
+let map = null; let auroraLayer = null; let userMarker = null; let cloudDataHourly = null;
+let currentTotalScore = 0;
+let lastScrollPos = 0;
+let searchTimer = null;
+let lastNotifiedLevel = 0; // Added from v1.1.12 logic
+
+function formatProbability(score) {
+    const rounded = Math.round(score);
+    if (rounded <= 0) return "< 1 %";
+    if (rounded >= 100) return "> 99 %";
+    return rounded + " %";
 }
 
-function handleNotifToggle(el) {
-  if (el.checked) {
-    Notification.requestPermission().then(p => {
-      if (p !== 'granted') el.checked = false;
+setInterval(() => { if (myLat !== null) updateAll(); }, 900000);
+
+function closeWelcome() { document.getElementById('welcome-overlay').style.display = 'none'; }
+function toggleData() {
+    const hiddenSection = document.getElementById("hidden-data");
+    const btn = document.getElementById("toggle-data-btn");
+    const isHidden = hiddenSection.style.display !== "block";
+    hiddenSection.style.display = isHidden ? "block" : "none";
+    btn.textContent = isHidden ? "Show Less Information" : "Show All Information";
+}
+
+function handleCityInput(el) {
+    const val = el.value.trim();
+    document.getElementById("btn-search").disabled = val.length === 0;
+    document.getElementById("search-error").style.opacity = "0";
+    clearTimeout(searchTimer);
+    if (val.length < 2) { closeAllLists(); return; }
+    searchTimer = setTimeout(async () => {
+        try {
+            const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(val)}&count=5&language=en`);
+            const data = await res.json();
+            showAutocomplete(data.results);
+        } catch (e) {}
+    }, 300);
+}
+
+function showAutocomplete(results) {
+    closeAllLists();
+    if (!results) return;
+    const list = document.getElementById("autocomplete-list");
+    results.forEach(res => {
+        const item = document.createElement("div");
+        item.className = "autocomplete-item";
+        item.innerHTML = `<strong>${res.name}</strong>, ${res.admin1 || ''} ${res.country}`;
+        item.onclick = (e) => {
+            e.stopPropagation();
+            document.getElementById("cityInput").value = res.name;
+            myLat = res.latitude; myLon = res.longitude;
+            document.getElementById("loc").textContent = `${res.name}, ${res.country}`;
+            closeAllLists();
+            updateAll();
+        };
+        list.appendChild(item);
     });
-  }
+}
+function closeAllLists() { const list = document.getElementById("autocomplete-list"); if(list) list.innerHTML = ""; }
+
+function openModal() {
+    if (myLat === null) { alert("Please set a location first"); return; }
+    document.getElementById("score-pct").textContent = formatProbability(currentTotalScore);
+    document.getElementById("detailModal").style.display = "flex";
+}
+function closeModal() { document.getElementById("detailModal").style.display = "none"; }
+
+function setItemLoading(id, isLoading) {
+    const el = document.getElementById(id); if (!el) return;
+    if (isLoading) { el.dataset.oldContent = el.innerHTML; el.innerHTML = '<span class="loading-text">⌛ <i>Loading...</i></span>'; }
+}
+
+function updateTimestamp(id) {
+    const now = new Date(); const pad = (num) => String(num).padStart(2, '0');
+    const formatted = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+    const el = document.getElementById(id); if (el) el.textContent = `Last Update: ${formatted}`;
+}
+
+async function getLocation() {
+    setItemLoading('loc', true);
+    document.getElementById('btn-gps').classList.add('loading-btn');
+    navigator.geolocation.getCurrentPosition(async p => {
+        myLat = p.coords.latitude; myLon = p.coords.longitude;
+        await reverseGeocode(myLat, myLon);
+        updateAll();
+        document.getElementById('btn-gps').classList.remove('loading-btn');
+    }, err => { alert("GPS Fetch Failed"); document.getElementById('loc').textContent = "Not Set"; document.getElementById('btn-gps').classList.remove('loading-btn'); });
+}
+
+async function searchCity() {
+    const city = document.getElementById("cityInput").value;
+    const errorEl = document.getElementById("search-error"); 
+    if(errorEl) errorEl.style.opacity = "0";
+    setItemLoading('loc', true);
+    document.getElementById('btn-search').classList.add('loading-btn');
+    try {
+        const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=en`);
+        const data = await res.json();
+        if (data.results && data.results.length > 0) {
+            const res0 = data.results[0]; myLat = res0.latitude; myLon = res0.longitude;
+            document.getElementById("loc").textContent = `${res0.name}, ${res0.country}`;
+            updateAll();
+        } else { 
+            document.getElementById('loc').textContent = "Not Set"; 
+            if(errorEl) errorEl.style.opacity = "1";
+        }
+    } catch (e) { alert("Search Error"); }
+    document.getElementById('btn-search').classList.remove('loading-btn');
+}
+
+async function updateAll() {
+    if (myLat === null) return;
+    const btn = document.getElementById('btn-update-all'); if(btn) btn.classList.add('loading-btn');
+    setItemLoading('result', true); setItemLoading('kp', true); setItemLoading('oval', true); setItemLoading('cloud', true);
+    await Promise.all([getKp(), fetchKp3DayForecast(), checkOval(), getCloud(), shortForecast()]);
+    calculateTotal();
+    
+    // Notification check trigger
+    checkNotificationAlert();
+    
+    if(btn) btn.classList.remove('loading-btn');
+    updateTimestamp('time-update-all');
+}
+
+async function refreshItem(type) {
+    if (myLat === null) return alert("Please set a location first");
+    const btnMapping = { kp: 'btn-refresh-kp', kp3: 'btn-refresh-kp3', oval: 'btn-refresh-oval', cloud: 'btn-refresh-cloud', short: 'btn-refresh-short' };
+    const loadMapping = { kp: 'kp', kp3: 'kp-short', oval: 'oval', cloud: 'cloud', short: 'forecast' };
+    const timeMapping = { kp: 'time-kp', kp3: 'time-kp3', oval: 'time-oval', cloud: 'time-cloud', short: 'time-short' };
+    setItemLoading(loadMapping[type], true);
+    const btn = document.getElementById(btnMapping[type]); if(btn) btn.classList.add('loading-btn');
+    if (type === 'kp') await getKp(); if (type === 'kp3') await fetchKp3DayForecast(); if (type === 'oval') await checkOval(); if (type === 'cloud') await getCloud(); if (type === 'short') await shortForecast();
+    calculateTotal(); if(btn) btn.classList.remove('loading-btn'); updateTimestamp(timeMapping[type]);
+}
+
+function calculateTotal() {
+    const now = new Date(); const currentHour = now.getHours();
+    const resultEl = document.getElementById("result");
+    const subLabelEl = document.getElementById("total-sub-label");
+    let isNight = (currentHour >= 21 || currentHour < 3);
+    subLabelEl.textContent = isNight ? "Current:" : "at 21:00:";
+
+    let evalKp = parseFloat(document.getElementById("kp").dataset.value) || 0;
+    let evalCloud = (!isNight && cloudDataHourly) ? cloudDataHourly[21] : (parseInt(document.getElementById("cloud").dataset.value) || 0);
+
+    let ovalScore = Math.min(45, (lastAuroraProb * 1.2) + (lastAuroraProb === 0 ? 5 : 10));
+    let kpScore = Math.min(40, evalKp * 12 + (evalKp >= 3 ? 5 : 0));
+    let skyScore = 15;
+    
+    let locationWeight = lastAuroraProb === 0 ? (evalKp >= 4 ? 0.3 : 0) : Math.min(1.0, 0.6 + (lastAuroraProb / 30));
+    let potentialScore = (ovalScore + kpScore + skyScore) * (lastAuroraProb > 0 ? 1.0 : locationWeight);
+
+    if (evalCloud > 85) { currentTotalScore = potentialScore * 0.1; } 
+    else if (evalCloud > 70) { currentTotalScore = potentialScore * 0.4; } 
+    else { currentTotalScore = potentialScore; }
+    
+    currentTotalScore = Math.min(100, currentTotalScore);
+
+    const shouldShowCloudIcon = (potentialScore >= 35 && currentTotalScore < 35 && evalCloud > 70);
+    const cloudTag = shouldShowCloudIcon ? '<span class="cloud-icon">☁️</span>' : '';
+
+    if (currentTotalScore >= 70) { resultEl.innerHTML = "High"; resultEl.className = "badge badge-large high"; } 
+    else if (currentTotalScore >= 35) { resultEl.innerHTML = "Possible"; resultEl.className = "badge badge-large mid"; } 
+    else { resultEl.innerHTML = `Low${cloudTag}`; resultEl.className = "badge badge-large low"; }
+}
+
+async function reverseGeocode(lat, lon) { try { const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&accept-language=en`); const data = await res.json(); document.getElementById("loc").textContent = (data.address.city || data.address.town || "Unknown") + ", " + data.address.country; } catch (e) { document.getElementById("loc").textContent = lat.toFixed(2) + ", " + lon.toFixed(2); } }
+
+async function getKp() { try { const res = await fetch(CORS + encodeURIComponent(KP_URL)); const data = await res.json(); const val = parseFloat(data[data.length - 1][1]); const el = document.getElementById("kp"); el.textContent = val.toFixed(1); el.dataset.value = val; if(val >= 5) el.className = "badge high"; else if(val >= 3) el.className = "badge mid"; else el.className = "badge low"; updateTimestamp('time-kp'); return val; } catch(e) { return 0; } }
+async function fetchKp3DayForecast() { try { const res = await fetch(CORS + encodeURIComponent(FORECAST_URL)); const text = await res.text(); const match = text.match(/NOAA Kp index breakdown[\s\S]*?(?=\n[A-Z]|$)/i); document.getElementById("kpForecast").innerText = match ? match[0].trim() : "Updating..."; document.getElementById("kp-short").innerHTML = `<div>Ref 3-day forecast (NOAA)</div>`; updateTimestamp('time-kp3'); } catch(e) { } }
+
+async function checkOval() { 
+    try { 
+        const res = await fetch(CORS + encodeURIComponent(OVAL_URL)); const data = await res.json(); cachedAuroraData = data; 
+        if (map) drawAurora(data); 
+        let bestProb = 0; let minDiff = 999; 
+        data.coordinates.forEach(p => { let diff = Math.abs(myLat - p[1]) + Math.abs(myLon - (p[0] > 180 ? p[0] - 360 : p[0])); if (diff < minDiff) { minDiff = diff; bestProb = p[2]; } }); 
+        lastAuroraProb = bestProb; document.getElementById("oval-prob").textContent = `Probability at your location: ${bestProb}%`; 
+        const el = document.getElementById("oval"); if(bestProb >= 10) { el.textContent = "Inside/Near Oval"; el.className = "badge high"; } else { el.textContent = "Outside Oval"; el.className = "badge low"; }
+        updateTimestamp('time-oval');
+    } catch(e) { } 
+}
+
+async function getCloud() { try { const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${myLat}&longitude=${myLon}&current=cloudcover`); const data = await res.json(); const val = data.current.cloudcover; const el = document.getElementById("cloud"); el.textContent = formatProbability(val); el.dataset.value = val; if(val <= 20) el.className = "badge high"; else if(val <= 60) el.className = "badge mid"; else el.className = "badge low"; updateTimestamp('time-cloud'); return val; } catch(e) { return 100; } }
+async function shortForecast() { try { const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${myLat}&longitude=${myLon}&hourly=cloudcover`); const data = await res.json(); cloudDataHourly = data.hourly.cloudcover; const hr = new Date().getHours(); let html = (hr >= 21 || hr < 3) ? `<div>🕒 In 3h: Clouds ${formatProbability(cloudDataHourly[3])}</div>` : `<div>🌙 Tonight(21:00): Clouds ${formatProbability(cloudDataHourly[21])}</div>`; html += `<div>📅 Tomorrow(21:00): Clouds ${formatProbability(cloudDataHourly[45])}</div>`; document.getElementById("forecast").innerHTML = html; updateTimestamp('time-short'); } catch(e) { } }
+
+function showMapScreen() { 
+    lastScrollPos = window.pageYOffset;
+    document.getElementById('home-screen').style.display = 'none'; 
+    document.getElementById('map-screen').style.display = 'block'; 
+    if (!map) initMap(); 
+    else { updateMapMarker(); setTimeout(() => { map.invalidateSize(); }, 50); }
+    window.scrollTo(0,0);
+}
+
+function hideMapScreen() { document.getElementById('map-screen').style.display = 'none'; document.getElementById('home-screen').style.display = 'block'; window.scrollTo(0, lastScrollPos); }
+
+function updateMapMarker() {
+    if (!map || myLat === null) return;
+    if (userMarker) {
+        userMarker.setLatLng([myLat, myLon]);
+        userMarker.bringToFront();
+    } else {
+        userMarker = L.circleMarker([myLat, myLon], { 
+            color: '#5bc0be', radius: 7, weight: 3, fillOpacity: 1.0, 
+            pane: 'markerPane'
+        }).addTo(map);
+        userMarker.bringToFront();
+    }
+    map.setView([myLat, myLon], map.getZoom());
+}
+
+function initMap() { 
+    map = L.map('map', { maxBounds: L.latLngBounds(L.latLng(-85, -360), L.latLng(85, 720)), maxBoundsViscosity: 1.0, minZoom: 2 }).setView([myLat || 70, myLon || 0], 3); 
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map); 
+    auroraLayer = L.layerGroup().addTo(map); 
+    if (cachedAuroraData) drawAurora(cachedAuroraData); 
+    updateMapMarker(); 
+}
+
+function drawAurora(data) { 
+    auroraLayer.clearLayers(); 
+    data.coordinates.forEach(p => { 
+        if (p[2] > 10) { 
+            let baseLon = p[0] > 180 ? p[0] - 360 : p[0]; 
+            let color = p[2] > 50 ? '#ff4500' : (p[2] > 25 ? '#ffff00' : '#00ff00'); 
+            [-360, 0, 360].forEach(offset => { 
+                L.rectangle([[p[1], baseLon + offset], [p[1] + 2, baseLon + offset + 2]], { 
+                    color: color, weight: 0, fillOpacity: p[2] / 100, interactive: false 
+                }).addTo(auroraLayer); 
+            }); 
+        } 
+    });
+    if (userMarker) userMarker.bringToFront();
+}
+
+/* --- Notification Functions (Added from v1.1.12) --- */
+async function toggleNotifications() {
+    const isChecked = document.getElementById('notify-toggle').checked;
+    if (isChecked) {
+        const permission = await Notification.requestPermission();
+        if (permission !== 'granted') {
+            alert('Notification permission denied.');
+            document.getElementById('notify-toggle').checked = false;
+        }
+    }
 }
 
 function testNotification() {
-  if (Notification.permission !== 'granted') {
-    alert('Notification permission not granted');
-    return;
-  }
-  setTimeout(() => {
-    navigator.serviceWorker.ready.then(reg => {
-      reg.showNotification('Aurora Forecast Alert', {
-        body: 'This is a test notification 🌌',
-        icon: 'icon.png'
-      });
-    });
-  }, 10000);
+    if (Notification.permission === 'granted') {
+        new Notification("Aurora Forecast Pro", {
+            body: "Test Alert: Aurora probability monitoring is active.",
+            icon: "icon.png"
+        });
+    } else {
+        alert("Please enable notification permissions first.");
+    }
+}
+
+function checkNotificationAlert() {
+    if (Notification.permission !== 'granted' || !document.getElementById('notify-toggle').checked) return;
+    
+    let currentLevel = 0;
+    if (currentTotalScore >= 70) currentLevel = 2; // High
+    else if (currentTotalScore >= 35) currentLevel = 1; // Possible
+
+    if (currentLevel > lastNotifiedLevel) {
+        let title = currentLevel === 2 ? "🌌 High Aurora Probability!" : "✨ Aurora Possible";
+        let body = `Current probability at your location is ${Math.round(currentTotalScore)}%. Check the sky!`;
+        new Notification(title, { body: body, icon: "icon.png" });
+    }
+    lastNotifiedLevel = currentLevel;
 }
 </script>
-
 </body>
 </html>
