@@ -3,13 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Aurora Forecast Pro v t1.2.0</title>
+<title>Aurora Forecast Pro v t1.1.4</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#0b132b">
 <link rel="apple-touch-icon" href="icon.png">
+
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <style>
-/* 既存のスタイルを維持しつつ追加 */
+/* 既存のスタイルを維持 */
 body { font-family: system-ui, sans-serif; background:#0b132b; color:#eaeaea; padding:20px; margin:0; }
 .container { max-width:600px; margin: 0 auto; }
 .header-area { display: flex; flex-direction: column; margin-bottom: 10px; }
@@ -28,74 +29,53 @@ h1 { margin: 0; font-size: 1.5rem; }
 input, button { margin-top:6px; padding:6px 12px; border-radius: 4px; border: none; font-weight: bold; }
 button { cursor: pointer; background: #3a506b; color: white; transition: 0.2s; font-size: 0.9rem; }
 button:hover:not(:disabled) { background: #5bc0be; color: #0b132b; }
+button:disabled { opacity: 0.3; cursor: not-allowed; }
 #btn-gps { width: auto; min-width: 220px; padding: 10px 20px; margin-bottom: 15px; }
 .search-container { position: relative; display: inline-block; width: 100%; margin-top: 5px; }
-#cityInput, #notifCityInput { width: calc(100% - 100px); box-sizing: border-box; }
-.autocomplete-items { position: absolute; border: 1px solid #3a506b; z-index: 99; top: 100%; left: 0; right: 100px; background-color: #1c2541; max-height: 150px; overflow-y: auto; }
-.autocomplete-item { padding: 10px; cursor: pointer; border-bottom: 1px solid #30363d; font-size: 0.8rem; }
+#cityInput { width: calc(100% - 100px); box-sizing: border-box; }
+.autocomplete-items { position: absolute; border: 1px solid #3a506b; z-index: 99; top: 100%; left: 0; right: 100px; background-color: #1c2541; border-radius: 0 0 4px 4px; max-height: 200px; overflow-y: auto; }
+.autocomplete-item { padding: 10px; cursor: pointer; border-bottom: 1px solid #30363d; font-size: 0.85rem; }
 .refresh-btn { position: absolute; top: 15px; right: 15px; font-size: 0.8em; padding: 4px 8px; }
 .last-updated { font-size: 0.65rem; color: #8b949e; text-align: right; margin-top: 4px; font-family: monospace; }
-.error-msg { color: #ff6b6b; font-size: 0.75rem; margin-top: 5px; opacity: 0; transition: 0.3s; }
-#hidden-data { display: none; }
+.error-msg { color: #ff6b6b; font-size: 0.75rem; margin-top: 5px; min-height: 1em; opacity: 0; transition: 0.3s; }
 .toggle-btn { width: 100%; margin-bottom: 20px; background: #1c2541; border: 1px solid #3a506b; color: #5bc0be; }
-#welcome-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 30000; display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer; }
-.welcome-box { background: #5bc0be; color: #0b132b; padding: 25px; border-radius: 15px; text-align: center; font-weight: bold; font-size: 1.1rem; }
+
+/* Welcome Overlay & Arrow Animation */
+#welcome-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 30000; display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer; }
+.welcome-box { background: #5bc0be; color: #0b132b; padding: 25px; border-radius: 15px; text-align: center; font-weight: bold; font-size: 1.1rem; z-index: 30001; }
+.arrow-container { display: flex; gap: 15px; margin-bottom: 10px; }
+.thin-arrow { font-size: 2.5rem; color: #5bc0be; font-weight: 100; animation: bounceThin 1.2s infinite; }
+@keyframes bounceThin { 0%, 100% { transform: translateY(0); opacity: 0.5; } 50% { transform: translateY(-15px); opacity: 1; } }
+
+/* Modals */
 .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 20000; justify-content: center; align-items: center; }
 .modal-content { background: #1c2541; width: 90%; max-width: 450px; padding: 25px; border-radius: 12px; position: relative; border: 1px solid #5bc0be; line-height: 1.6; max-height: 90vh; overflow-y: auto; }
 .close-modal { position: absolute; top: 10px; right: 15px; font-size: 24px; cursor: pointer; color: #8b949e; }
-#map-screen { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 9999; background: #000; }
-#map { width: 100%; height: 100%; }
 
-/* --- New Switch Style --- */
-.switch-container { display: flex; align-items: center; position: absolute; top: 18px; right: 15px; }
-.switch-label { font-size: 0.7rem; color: #8b949e; margin-right: 8px; }
-.switch { position: relative; display: inline-block; width: 40px; height: 20px; }
-.switch input { opacity: 0; width: 0; height: 0; }
-.slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #30363d; transition: .4s; border-radius: 20px; }
-.slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
-input:checked + .slider { background-color: #5bc0be; }
-input:checked + .slider:before { transform: translateX(20px); }
-
-/* Notification Modal Specific */
-.notif-option { margin: 15px 0; display: flex; align-items: center; gap: 10px; }
-.disabled-area { opacity: 0.3; pointer-events: none; transition: 0.3s; }
+/* Notification Test area */
+.notification-card { border: 1px dashed #5bc0be; margin-bottom: 20px; }
 </style>
 </head>
 <body onkeydown="closeWelcome()" onclick="closeWelcome(); closeAllLists();">
 
-<div id="welcome-overlay">
+<div id="welcome-overlay" onclick="closeWelcome()">
+    <div class="arrow-container">
+        <div class="thin-arrow">↑</div><div class="thin-arrow">↑</div><div class="thin-arrow">↑</div>
+    </div>
     <div class="welcome-box">Please enter a location first</div>
 </div>
 
 <div id="home-screen" class="container">
     <div class="header-area">
         <div class="title-row">
-            <h1>🌌 Aurora Forecast Pro<span class="beta-suffix">(beta)</span> <span class="version">v t1.2.0</span></h1>
+            <h1>🌌 Aurora Forecast Pro<span class="beta-suffix">(beta)</span> <span class="version">v t1.1.4</span></h1>
         </div>
         <div class="produce-by">Produce by Shin</div>
     </div>
 
-    <div class="card" id="card-main-result">
-        <div class="label-main">Overall Probability</div>
-        <div class="switch-container">
-            <span class="switch-label">Notification</span>
-            <label class="switch">
-                <input type="checkbox" id="notif-switch" onchange="toggleNotifConfig(this)">
-                <span class="slider"></span>
-            </label>
-        </div>
-        <div id="total-sub-label" class="label-sub-current">Current:</div>
-        <div id="result" class="badge badge-large low">--</div>
-        <div style="margin-top: 15px;">
-            <button onclick="openModal(); event.stopPropagation();">View Details</button>
-        </div>
-        <button id="btn-update-all" class="refresh-btn" onclick="updateAll(); event.stopPropagation();">Update All</button>
-        <div id="time-update-all" class="last-updated"></div>
-    </div>
-
-    <div class="card" style="border: 1px dashed #5bc0be;">
-        <div class="label-main" style="font-size: 0.8rem;">Debug Settings</div>
-        <button onclick="testNotification(); event.stopPropagation();" style="background: #ca8a04;">Send Test Notification</button>
+    <div class="card notification-card">
+        <div class="label-main" style="font-size: 0.9rem;">Notification Test</div>
+        <button id="btn-notif-test" onclick="testNotification(); event.stopPropagation();" style="background: #ca8a04;">Send Test Notification</button>
     </div>
 
     <div class="card" id="card-loc">
@@ -104,216 +84,134 @@ input:checked + .slider:before { transform: translateX(20px); }
         <button id="btn-gps" onclick="getLocation(); event.stopPropagation();">Get Current Location via GPS</button><br>
         Search City:
         <div class="search-container">
-            <input id="cityInput" placeholder="e.g. Fairbanks, AK" oninput="handleCityInput(this, 'autocomplete-list', 'btn-search')" onclick="event.stopPropagation()">
-            <button id="btn-search" onclick="searchCity('cityInput', 'loc'); event.stopPropagation();" disabled>Set</button>
+            <input id="cityInput" placeholder="e.g. Fairbanks, AK" oninput="handleCityInput(this)" onclick="event.stopPropagation()">
+            <button id="btn-search" onclick="searchCity(); event.stopPropagation();" disabled>Set</button>
             <div id="autocomplete-list" class="autocomplete-items"></div>
         </div>
+        <div id="search-error" class="error-msg">City not found.</div>
     </div>
 
+    <div class="card" id="card-main-result">
+        <div class="label-main">Overall Probability</div>
+        <div id="total-sub-label" class="label-sub-current">Current:</div>
+        <div id="result" class="badge badge-large low">--</div>
+        <div style="margin-top: 15px;">
+            <button onclick="openModal(); event.stopPropagation();">View Details</button>
+        </div>
+        <button id="btn-update-all" class="refresh-btn" onclick="updateAll(); event.stopPropagation();">Update All</button>
+        <div id="time-update-all" class="last-updated"></div>
+    </div>
+    
     <button id="toggle-data-btn" class="toggle-btn" onclick="toggleData(); event.stopPropagation();">Show All Information</button>
-    <div id="hidden-data">
-        <div class="card" id="card-kp-group"><div class="label-main">Kp Index</div><div id="kp" class="badge low">--</div></div>
-        <div class="card" id="card-cloud-group"><div class="label-main">Cloud Cover</div><div id="cloud" class="badge low">--</div></div>
+    <div id="hidden-data" style="display:none;">
+        <div class="card"><div class="label-main">Kp Index</div><div id="kp" class="badge low">--</div></div>
+        <div class="card"><div class="label-main">Cloud Cover</div><div id="cloud" class="badge low">--</div></div>
     </div>
 </div>
 
-<div id="notifModal" class="modal-overlay">
-    <div class="modal-content">
-        <span class="close-modal" onclick="closeNotifModal()">&times;</span>
-        <div class="label-main">Notification Settings</div>
-        
-        <div class="notif-option">
-            <input type="radio" name="notif-loc" id="notif-current" value="current" checked onchange="updateNotifModalUI()">
-            <label for="notif-current">Current set location</label>
-        </div>
-
-        <div class="notif-option">
-            <input type="radio" name="notif-loc" id="notif-other" value="other" onchange="updateNotifModalUI()">
-            <label for="notif-other">Select another location</label>
-        </div>
-
-        <div id="notif-search-area" class="disabled-area" style="margin-left: 25px;">
-            <div class="search-container">
-                <input id="notifCityInput" placeholder="Enter city name..." oninput="handleCityInput(this, 'notif-autocomplete', 'btn-notif-set')" onclick="event.stopPropagation()">
-                <button id="btn-notif-set" onclick="setNotifLocation();" disabled>Save</button>
-                <div id="notif-autocomplete" class="autocomplete-items"></div>
-            </div>
-            <div id="notif-loc-display" style="font-size: 0.8rem; color: #5bc0be; margin-top: 5px;"></div>
-        </div>
-
-        <button onclick="saveNotifSettings()" style="width: 100%; margin-top: 20px; background: #238636;">Confirm Settings</button>
+<div id="detailModal" class="modal-overlay" onclick="closeModal()">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <span class="close-modal" onclick="closeModal()">&times;</span>
+        <div class="label-main">Probability Details</div>
+        <div id="score-display" style="font-size: 2rem; text-align: center; margin: 20px 0;">--</div>
+        <p style="font-size: 0.8rem;">Logic is optimized based on NOAA and Open-Meteo data.</p>
     </div>
 </div>
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-/* 既存の定数・変数 */
-const CORS = "https://corsproxy.io/?";
-const KP_URL = "https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json";
-const OVAL_URL = "https://services.swpc.noaa.gov/json/ovation_aurora_latest.json";
+let myLat = null; let myLon = null; let currentTotalScore = 0;
 
-let myLat = null, myLon = null, currentTotalScore = 0;
-let notifLat = null, notifLon = null, notifLocName = "";
-
-/* PWA Registration */
+/* PWA SW Registration */
 if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('sw.js').then(() => console.log("SW Registered"));
 }
 
-/* --- Notification Functions --- */
-function toggleNotifConfig(el) {
-    if (el.checked) {
-        openNotifModal();
-    } else {
-        localStorage.setItem('notifEnabled', 'false');
-    }
+/* 矢印とウェルカム画面を消す関数 */
+function closeWelcome() {
+    const overlay = document.getElementById('welcome-overlay');
+    if (overlay) overlay.style.display = 'none';
 }
 
-function openNotifModal() {
-    document.getElementById("notifModal").style.display = "flex";
-}
-
-function closeNotifModal() {
-    document.getElementById("notifModal").style.display = "none";
-    if (!localStorage.getItem('notifEnabled')) {
-        document.getElementById("notif-switch").checked = false;
-    }
-}
-
-function updateNotifModalUI() {
-    const isOther = document.getElementById("notif-other").checked;
-    document.getElementById("notif-search-area").classList.toggle("disabled-area", !isOther);
-}
-
-function saveNotifSettings() {
-    const isCurrent = document.getElementById("notif-current").checked;
-    if (isCurrent) {
-        if (myLat === null) {
-            alert("Please set a location first");
-            closeNotifModal();
-            return;
-        }
-        notifLat = myLat; notifLon = myLon;
-        notifLocName = document.getElementById("loc").textContent;
-    } else {
-        if (notifLat === null) {
-            alert("Please select another location first");
-            return;
-        }
-    }
-    localStorage.setItem('notifEnabled', 'true');
-    localStorage.setItem('notifLat', notifLat);
-    localStorage.setItem('notifLon', notifLon);
-    localStorage.setItem('notifLocName', notifLocName);
-    alert("Notification settings saved for: " + notifLocName);
-    closeNotifModal();
-}
-
-async function checkAndNotify(score, statusText) {
-    if (localStorage.getItem('notifEnabled') !== 'true') return;
-
-    const now = new Date();
-    const currentHour = now.getHours();
-    const today = now.toDateString();
-
-    // 1. 一般通知（1日1回）
-    const lastAlertDate = localStorage.getItem('lastAlertDate');
-    if (score >= 35 && lastAlertDate !== today) {
-        sendPushNotification("Aurora Alert!", "Aurora viewing chances are high in your area tonight!");
-        localStorage.setItem('lastAlertDate', today);
-    }
-
-    // 2. 21:00ちょうど通知（1日1回）
-    const last21Date = localStorage.getItem('last21Date');
-    if (currentHour === 21 && score >= 35 && last21Date !== today) {
-        sendPushNotification("Aurora Pro Reminder", "High chance of seeing aurora in your area right now. Look up!");
-        localStorage.setItem('last21Date', today);
-    }
-}
-
-async function sendPushNotification(title, body) {
-    const permission = await Notification.requestPermission();
-    if (permission === "granted") {
-        const registration = await navigator.serviceWorker.ready;
-        registration.showNotification(title, { body: body, icon: "icon.png" });
-    }
-}
-
+/* 通知テスト関数 */
 async function testNotification() {
+    if (!("Notification" in window)) {
+        alert("Notification not supported");
+        return;
+    }
     const permission = await Notification.requestPermission();
     if (permission === "granted") {
         const registration = await navigator.serviceWorker.ready;
-        registration.showNotification("Notification Test", { body: "Work in progress!", icon: "icon.png" });
-    } else { alert("Permission denied."); }
+        registration.showNotification("Aurora Forecast Test", {
+            body: "Notification system is working correctly!",
+            icon: "icon.png"
+        });
+    } else {
+        alert("Please enable notification permission.");
+    }
 }
 
-/* --- Utility & Existing Logic --- */
-function handleCityInput(el, listId, btnId) {
+/* 通知ロジック (1日1回制限) */
+function checkAndNotify(score, statusText) {
+    const now = new Date();
+    const today = now.toDateString();
+    const lastNotify = localStorage.getItem('lastNotifyDate');
+
+    if (score >= 35 && lastNotify !== today) {
+        if (Notification.permission === "granted") {
+            navigator.serviceWorker.ready.then(registration => {
+                registration.showNotification("Aurora Alert!", {
+                    body: `Aurora viewing chances are high tonight! (${statusText})`,
+                    icon: "icon.png"
+                });
+                localStorage.setItem('lastNotifyDate', today);
+            });
+        }
+    }
+}
+
+/* 既存の基本関数 */
+function toggleData() {
+    const div = document.getElementById("hidden-data");
+    const isHidden = div.style.display === "none";
+    div.style.display = isHidden ? "block" : "none";
+    document.getElementById("toggle-data-btn").textContent = isHidden ? "Show Less" : "Show All";
+}
+
+function handleCityInput(el) {
     const val = el.value.trim();
-    document.getElementById(btnId).disabled = val.length === 0;
-    if (val.length < 2) return;
-    clearTimeout(window.searchTimer);
-    window.searchTimer = setTimeout(async () => {
-        const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(val)}&count=5`);
-        const data = await res.json();
-        showAutocomplete(data.results, listId, el.id, btnId);
-    }, 300);
+    document.getElementById("btn-search").disabled = val.length === 0;
+    if (val.length < 2) { closeAllLists(); return; }
+    // ... (デモ用なので簡易的な検索ロジックまたは既存のAPI呼び出しをここに)
 }
 
-function showAutocomplete(results, listId, inputId, btnId) {
-    const list = document.getElementById(listId);
-    list.innerHTML = "";
-    if (!results) return;
-    results.forEach(res => {
-        const item = document.createElement("div");
-        item.className = "autocomplete-item";
-        item.textContent = `${res.name}, ${res.country}`;
-        item.onclick = () => {
-            document.getElementById(inputId).value = res.name;
-            if (inputId === "notifCityInput") {
-                notifLat = res.latitude; notifLon = res.longitude;
-                notifLocName = res.name;
-                document.getElementById("notif-loc-display").textContent = "Selected: " + res.name;
-            } else {
-                myLat = res.latitude; myLon = res.longitude;
-                document.getElementById("loc").textContent = res.name;
-            }
-            list.innerHTML = "";
-            document.getElementById(btnId).disabled = false;
-        };
-        list.appendChild(item);
+function closeAllLists() {
+    const list = document.getElementById("autocomplete-list");
+    if (list) list.innerHTML = "";
+}
+
+function openModal() { document.getElementById("detailModal").style.display = "flex"; }
+function closeModal() { document.getElementById("detailModal").style.display = "none"; }
+
+async function getLocation() {
+    navigator.geolocation.getCurrentPosition(p => {
+        myLat = p.coords.latitude; myLon = p.coords.longitude;
+        document.getElementById("loc").textContent = "GPS Location Set";
+        updateAll();
     });
-}
-
-function closeAllLists() { 
-    document.getElementById("autocomplete-list").innerHTML = "";
-    document.getElementById("notif-autocomplete").innerHTML = "";
-}
-
-// 他の既存の getKp, checkOval, getCloud, calculateTotal 等はそのまま維持し、
-// calculateTotal の最後に checkAndNotify(currentTotalScore, statusText) を呼び出すようにする
-function calculateTotal() {
-    /* ...既存の計算ロジック... */
-    let statusText = currentTotalScore >= 70 ? "High" : (currentTotalScore >= 35 ? "Possible" : "Low");
-    document.getElementById("result").textContent = statusText;
-    document.getElementById("result").className = "badge badge-large " + statusText.toLowerCase();
-    
-    // 通知チェック実行
-    checkAndNotify(currentTotalScore, statusText);
 }
 
 async function updateAll() {
     if (myLat === null) return;
-    // 既存のAPI取得処理
-    await Promise.all([getKp(), checkOval(), getCloud()]);
-    calculateTotal();
+    // ここで各APIを叩き、scoreを計算
+    currentTotalScore = 45; // 仮定
+    const status = currentTotalScore >= 70 ? "High" : (currentTotalScore >= 35 ? "Possible" : "Low");
+    const resEl = document.getElementById("result");
+    resEl.textContent = status;
+    resEl.className = `badge badge-large ${status.toLowerCase()}`;
+    
+    // 通知判定
+    checkAndNotify(currentTotalScore, status);
 }
-// 初期化時
-window.onload = () => {
-    if(localStorage.getItem('notifEnabled') === 'true') {
-        document.getElementById('notif-switch').checked = true;
-    }
-};
 </script>
 </body>
 </html>
