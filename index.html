@@ -16,17 +16,14 @@ body { font-family: system-ui, sans-serif; background:#0b132b; color:#eaeaea; pa
 .produce-by { font-size: 0.7rem; color: #8b949e; margin-top: -5px; margin-bottom: 10px; align-self: flex-end; }
 .version { font-size: 0.4em; vertical-align: middle; color: #5bc0be; margin-left: 8px; font-weight: normal; }
 .title-row { display: flex; justify-content: space-between; align-items: baseline; width: 100%; }
-.beta-suffix { font-size: 0.6em; color: #8b949e; font-weight: normal; margin-left: 5px; text-transform: lowercase; }
 h1 { margin: 0; font-size: 1.5rem; }
 .card { background:#1c2541; padding:20px; border-radius:12px; margin-bottom:20px; position: relative; border: 1px solid #30363d; }
 .label-main { font-size: 1.1rem; font-weight: bold; color: #5bc0be; margin-bottom: 0px; }
 .label-sub-current { font-size: 0.8rem; color: #8b949e; margin-bottom: 10px; }
 .value { font-size:1.6em; margin-top:4px; min-height: 1.2em; }
-.sub-section { margin-top: 15px; padding-top: 15px; border-top: 1px solid #30363d; position: relative; }
 .badge { display:inline-block; padding:10px 24px; border-radius:30px; font-weight:bold; font-size: 1.2rem; letter-spacing: 0.05em; box-shadow: 0 4px 15px rgba(0,0,0,0.3); margin-top: 5px; position: relative; }
 .badge-large { font-size: 1.5rem; }
 .low { background:#475569; } .mid { background:#ca8a04; } .high { background:#dc2626; }
-.cloud-icon { font-size: 0.8em; margin-left: 8px; vertical-align: middle; }
 input, button { margin-top:6px; padding:6px 12px; border-radius: 4px; border: none; font-weight: bold; }
 button { cursor: pointer; background: #3a506b; color: white; transition: 0.2s; font-size: 0.9rem; }
 button:hover:not(:disabled) { background: #5bc0be; color: #0b132b; }
@@ -34,16 +31,13 @@ button:disabled { opacity: 0.3; cursor: not-allowed; }
 #btn-gps { width: auto; min-width: 220px; padding: 10px 20px; margin-bottom: 15px; }
 .search-container { position: relative; display: inline-block; width: 100%; margin-top: 5px; }
 #cityInput { width: calc(100% - 100px); box-sizing: border-box; }
-.autocomplete-items { position: absolute; border: 1px solid #3a506b; border-bottom: none; border-top: none; z-index: 99; top: 100%; left: 0; right: 100px; background-color: #1c2541; border-radius: 0 0 4px 4px; max-height: 200px; overflow-y: auto; }
+.autocomplete-items { position: absolute; border: 1px solid #3a506b; z-index: 99; top: 100%; left: 0; right: 100px; background-color: #1c2541; border-radius: 0 0 4px 4px; max-height: 200px; overflow-y: auto; }
 .autocomplete-item { padding: 10px; cursor: pointer; border-bottom: 1px solid #30363d; font-size: 0.85rem; }
 .autocomplete-item:hover { background-color: #3a506b; color: #5bc0be; }
 .refresh-btn { position: absolute; top: 15px; right: 15px; font-size: 0.8em; padding: 4px 8px; z-index: 10; }
 .last-updated { font-size: 0.65rem; color: #8b949e; text-align: right; margin-top: 4px; font-family: monospace; }
-.refresh-btn + .last-updated { position: absolute; top: 40px; right: 15px; width: auto; z-index: 10; }
-
 .notification-card { border: 1px dashed #5bc0be !important; margin-top: 10px; }
 .btn-test { background: #ca8a04 !important; }
-
 .switch { position: relative; display: inline-block; width: 44px; height: 22px; margin-top: 5px; }
 .switch input { opacity: 0; width: 0; height: 0; }
 .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #3a506b; transition: .4s; border-radius: 22px; }
@@ -51,27 +45,19 @@ button:disabled { opacity: 0.3; cursor: not-allowed; }
 input:checked + .slider { background-color: #5bc0be; }
 input:checked + .slider:before { transform: translateX(22px); }
 .switch-label { font-size: 0.75rem; color: #5bc0be; white-space: nowrap; font-weight: bold; padding-top: 55px; }
-
 .search-disabled { opacity: 0.4; pointer-events: none; }
 .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 20000; justify-content: center; align-items: center; }
-.modal-content { background: #1c2541; width: 90%; max-width: 450px; padding: 25px; border-radius: 12px; position: relative; border: 1px solid #5bc0be; line-height: 1.6; max-height: 90vh; overflow-y: auto; }
+.modal-content { background: #1c2541; width: 90%; max-width: 450px; padding: 25px; border-radius: 12px; position: relative; border: 1px solid #5bc0be; line-height: 1.6; }
 .close-modal { position: absolute; top: 10px; right: 15px; font-size: 24px; cursor: pointer; color: #8b949e; }
 #map-screen { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 9999; background: #000; }
-#map { width: 100%; height: 100%; background: #000; }
+#map { width: 100%; height: 100%; }
 #back-btn { position: absolute; top: 90px; left: 10px; z-index: 10000; background: #21262d; border: 1px solid #30363d; color: white; padding: 8px 16px; }
 .toggle-btn { width: 100%; margin-bottom: 20px; background: #1c2541; border: 1px solid #3a506b; color: #5bc0be; }
 #hidden-data { display: none; }
-pre { background:#0b132b; padding:12px; border-radius:8px; font-family: monospace; font-size: 0.85em; overflow-x: auto; white-space: pre-wrap; border: 1px solid #3a506b; }
+pre { background:#0b132b; padding:12px; border-radius:8px; font-family: monospace; font-size: 0.85em; overflow-x: auto; border: 1px solid #3a506b; }
 </style>
 </head>
 <body onclick="closeAllLists();">
-
-<div id="welcome-overlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 30000; display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer;" onclick="this.style.display='none'">
-    <div style="display: flex; gap: 15px; margin-bottom: 10px;">
-        <div style="font-size: 2.5rem; color: #5bc0be; animation: bounce 1.2s infinite;">↑</div>
-    </div>
-    <div style="background: #5bc0be; color: #0b132b; padding: 25px; border-radius: 15px; text-align: center; font-weight: bold;">Please enter a location first</div>
-</div>
 
 <div id="home-screen" class="container">
     <div class="header-area">
@@ -84,7 +70,6 @@ pre { background:#0b132b; padding:12px; border-radius:8px; font-family: monospac
     <div class="card notification-card">
         <div class="label-main" style="font-size: 0.9rem;">App Settings</div>
         <button id="btn-notif-test" class="btn-test" onclick="testNotification();">Send Test Notification (10s delay)</button>
-        <div id="notif-status" style="font-size: 0.7rem; color: #8b949e; margin-top: 5px;">Push notifications: Enabled if "Possible" or "High"</div>
     </div>
 
     <div class="card" id="card-loc">
@@ -168,11 +153,8 @@ pre { background:#0b132b; padding:12px; border-radius:8px; font-family: monospac
 <div id="detailModal" class="modal-overlay" onclick="this.style.display='none'">
     <div class="modal-content" onclick="event.stopPropagation()">
         <span class="close-modal" onclick="document.getElementById('detailModal').style.display='none'">&times;</span>
-        <div>Probability Details</div>
+        <div style="color:#5bc0be; font-weight:bold; margin-bottom:10px;">Probability Details</div>
         <div style="font-size: 2.5rem; text-align: center; margin: 15px 0;" id="score-pct">--</div>
-        <div style="font-size: 0.85rem;">
-            <p>Calculated based on Oval proximity, Kp Index, and Cloud Cover.</p>
-        </div>
     </div>
 </div>
 
@@ -188,11 +170,8 @@ const KP_URL = "https://services.swpc.noaa.gov/products/noaa-planetary-k-index.j
 const OVAL_URL = "https://services.swpc.noaa.gov/json/ovation_aurora_latest.json";
 const FORECAST_URL = "https://services.swpc.noaa.gov/text/3-day-forecast.txt";
 
-let myLat = null, myLon = null, lastAuroraProb = 0, currentTotalScore = 0, map = null, cloudDataHourly = null, isNotifSettingsSaved = false;
+let myLat = null, myLon = null, lastAuroraProb = 0, currentTotalScore = 0, map = null, isNotifSettingsSaved = false;
 
-if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js'); }
-
-// --- 通知関連ロジック ---
 async function handleNotifToggle(el) {
     if (el.checked) {
         const permission = await Notification.requestPermission();
@@ -202,7 +181,7 @@ async function handleNotifToggle(el) {
             updateDoneButtonState();
         } else {
             el.checked = false;
-            alert("Please enable notifications in browser settings.");
+            alert("Please enable notifications in settings.");
         }
     } else {
         localStorage.setItem('notifEnabled', 'false');
@@ -220,6 +199,19 @@ function closeNotifModal() {
 function saveNotifSettings() {
     isNotifSettingsSaved = true;
     localStorage.setItem('notifEnabled', 'true');
+    
+    // 選択された場所の名前を取得
+    const radioAnother = document.querySelector('input[name="notif-loc-type"][value="another"]');
+    let locationName = "Current Location";
+    if (radioAnother.checked) {
+        locationName = document.getElementById("notifCityInput").value;
+    } else if (document.getElementById("loc").textContent !== "Not Set") {
+        locationName = document.getElementById("loc").textContent;
+    }
+
+    // 完了メッセージを表示
+    alert(`Notification set for:\n${locationName}`);
+    
     document.getElementById("notifModal").style.display = "none";
 }
 
@@ -227,13 +219,11 @@ function updateDoneButtonState() {
     const radioAnother = document.querySelector('input[name="notif-loc-type"][value="another"]');
     const doneBtn = document.getElementById("btn-notif-done");
     if (radioAnother.checked) {
-        // 別地域選択時は、緯度経度が確定しているかチェック
         const cityVal = document.getElementById("notifCityInput").value.trim();
         const isDisabled = cityVal === "" || myLat === null;
         doneBtn.disabled = isDisabled;
         doneBtn.style.opacity = isDisabled ? "0.3" : "1";
     } else {
-        // 現在地選択時は myLat があればOK
         const isDisabled = myLat === null;
         doneBtn.disabled = isDisabled;
         doneBtn.style.opacity = isDisabled ? "0.3" : "1";
@@ -245,45 +235,19 @@ function toggleNotifSearch(enabled) {
     updateDoneButtonState();
 }
 
-function getHighPriorityOptions(body, tag) {
-    return {
-        body: body, icon: "icon.png", badge: "icon.png", tag: tag,
-        renotify: true, priority: "high", vibrate: [500, 110, 500],
-        data: { priority: "high" },
-        actions: [{ action: 'open', title: 'Open App' }]
-    };
-}
-
 async function testNotification() {
     const permission = await Notification.requestPermission();
     if (permission === "granted") {
         const btn = document.getElementById("btn-notif-test");
-        btn.textContent = "Wait 10s (Close App now!)..."; btn.disabled = true;
+        btn.textContent = "Wait 10s..."; btn.disabled = true;
         setTimeout(async () => {
             const reg = await navigator.serviceWorker.ready;
-            await reg.showNotification("🌌 Test Alert", getHighPriorityOptions("High priority test successful!", "test"));
+            await reg.showNotification("🌌 Test Alert", { body: "High priority test!", icon: "icon.png" });
             btn.textContent = "Send Test Notification (10s delay)"; btn.disabled = false;
         }, 10000);
     }
 }
 
-function sendPush(title, body) {
-    if (Notification.permission === "granted" && localStorage.getItem('notifEnabled') === 'true') {
-        navigator.serviceWorker.ready.then(reg => {
-            reg.showNotification(title, getHighPriorityOptions(body, "aurora-real"));
-        });
-    }
-}
-
-function checkAndNotify(score, statusText) {
-    const today = new Date().toDateString();
-    if (score >= 35 && localStorage.getItem('lastNotifyDate') !== today) {
-        sendPush("🌌 Aurora Alert!", `Chances are ${statusText} in your area!`);
-        localStorage.setItem('lastNotifyDate', today);
-    }
-}
-
-// --- データ取得ロジック ---
 function handleCityInput(el) {
     const isN = el.id === "notifCityInput", val = el.value.trim();
     if (!isN) document.getElementById("btn-search").disabled = val.length === 0;
@@ -305,8 +269,9 @@ function showAutocomplete(results, isN) {
         item.innerHTML = `${res.name}, ${res.country}`;
         item.onclick = (e) => {
             e.stopPropagation(); myLat = res.latitude; myLon = res.longitude;
-            document.getElementById(isN ? "notifCityInput" : "cityInput").value = res.name;
-            document.getElementById("loc").textContent = res.name;
+            const fullLabel = `${res.name}, ${res.country}`;
+            document.getElementById(isN ? "notifCityInput" : "cityInput").value = fullLabel;
+            document.getElementById("loc").textContent = fullLabel;
             list.innerHTML = ""; updateAll(); updateDoneButtonState();
         };
         list.appendChild(item);
@@ -324,17 +289,15 @@ async function getLocation() {
         myLat = p.coords.latitude; myLon = p.coords.longitude;
         const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${myLat}&lon=${myLon}&format=json`);
         const data = await res.json();
-        document.getElementById("loc").textContent = data.address.city || "Current Location";
+        document.getElementById("loc").textContent = data.address.city || data.address.town || "Current Location";
         updateAll(); updateDoneButtonState();
     });
 }
 
 async function updateAll() {
     if (myLat === null) return;
-    document.getElementById('btn-update-all').classList.add('loading-btn');
     await Promise.all([getKp(), checkOval(), getCloud()]);
     calculateTotal();
-    document.getElementById('btn-update-all').classList.remove('loading-btn');
     document.getElementById('time-update-all').textContent = "Last: " + new Date().toLocaleTimeString();
 }
 
@@ -345,12 +308,9 @@ function calculateTotal() {
     if (cloud > 85) score *= 0.1; else if (cloud > 70) score *= 0.4;
     currentTotalScore = Math.min(100, score);
     const el = document.getElementById("result");
-    let status = "Low";
-    if (currentTotalScore >= 70) { status = "High"; el.className = "badge badge-large high"; }
-    else if (currentTotalScore >= 35) { status = "Possible"; el.className = "badge badge-large mid"; }
-    else { el.className = "badge badge-large low"; }
-    el.innerHTML = status;
-    checkAndNotify(currentTotalScore, status);
+    if (currentTotalScore >= 70) { el.innerHTML = "High"; el.className = "badge badge-large high"; }
+    else if (currentTotalScore >= 35) { el.innerHTML = "Possible"; el.className = "badge badge-large mid"; }
+    else { el.innerHTML = "Low"; el.className = "badge badge-large low"; }
 }
 
 async function getKp() {
@@ -360,8 +320,8 @@ async function getKp() {
     const el = document.getElementById("kp");
     el.textContent = "Kp " + val; el.dataset.value = val;
     el.className = "badge " + (val >= 5 ? "high" : (val >= 3 ? "mid" : "low"));
-    const forecastRes = await fetch(CORS + encodeURIComponent(FORECAST_URL));
-    document.getElementById("kpForecast").innerText = (await forecastRes.text()).substring(0, 300);
+    const fRes = await fetch(CORS + encodeURIComponent(FORECAST_URL));
+    document.getElementById("kpForecast").innerText = (await fRes.text()).substring(0, 300);
 }
 
 async function checkOval() {
