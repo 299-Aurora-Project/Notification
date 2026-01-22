@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Aurora Forecast Pro v t1.1.15</title>
+<title>Aurora Forecast Pro v t1.1.16</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <style>
 body { font-family: system-ui, sans-serif; background:#0b132b; color:#eaeaea; padding:20px; margin:0; }
@@ -41,50 +41,39 @@ button:disabled { opacity: 0.3; cursor: not-allowed; }
 .toggle-btn { width: 100%; margin-bottom: 20px; background: #1c2541; border: 1px solid #3a506b; color: #5bc0be; }
 pre { background:#0b132b; padding:12px; border-radius:8px; font-family: monospace; font-size: 0.85em; overflow-x: auto; white-space: pre-wrap; border: 1px solid #3a506b; min-height: 50px; }
 
-/* Welcome Overlay & Arrow Animations */
-#welcome-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 30000; display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer; }
-.welcome-box { background: #5bc0be; color: #0b132b; padding: 25px; border-radius: 15px; text-align: center; font-weight: bold; font-size: 1.1rem; z-index: 30001; }
-.arrow-container { display: flex; gap: 15px; margin-bottom: 10px; }
-.thin-arrow { font-size: 2.5rem; color: #5bc0be; font-weight: 100; animation: bounceThin 1.2s infinite; }
-@keyframes bounceThin { 0%, 100% { transform: translateY(0); opacity: 0.5; } 50% { transform: translateY(-15px); opacity: 1; } }
-
-/* Notification Toggle Adjustments */
-.switch-label { 
-    font-size: 0.75rem; 
-    color: #5bc0be; 
-    white-space: nowrap; 
-    font-weight: bold; 
-    padding-top: 75px; /* 55px + 20px */
-}
-.switch { 
-    position: relative; 
-    display: inline-block; 
-    width: 44px; 
-    height: 22px; 
-    margin-top: 5px; /* Changed from 30px to 5px */
-}
+/* Notification Layout Fix (v t1.1.11) */
+.notif-container { position: absolute; top: 20px; right: 20px; display: flex; flex-direction: column; align-items: flex-end; }
+.switch-label { font-size: 0.75rem; color: #5bc0be; font-weight: bold; margin-bottom: 5px; padding-top: 75px; }
+.switch { position: relative; display: inline-block; width: 44px; height: 22px; margin-top: 5px; }
 .switch input { opacity: 0; width: 0; height: 0; }
 .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #3a506b; transition: .4s; border-radius: 22px; }
 .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
 input:checked + .slider { background-color: #5bc0be; }
 input:checked + .slider:before { transform: translateX(22px); }
 
-/* Loading Text v1.0.31 Format */
-.loading-text { opacity: 0.6; font-size: 1rem; color: #8b949e; font-style: normal; }
-.loading-text i { font-style: italic; }
+/* Welcome Overlay */
+#welcome-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 30000; display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer; }
+.welcome-box { background: #5bc0be; color: #0b132b; padding: 25px; border-radius: 15px; text-align: center; font-weight: bold; font-size: 1.1rem; z-index: 30001; }
+.arrow-container { display: flex; gap: 15px; margin-bottom: 10px; }
+.thin-arrow { font-size: 2.5rem; color: #5bc0be; font-weight: 100; animation: bounceThin 1.2s infinite; }
+@keyframes bounceThin { 0%, 100% { transform: translateY(0); opacity: 0.5; } 50% { transform: translateY(-15px); opacity: 1; } }
 
 /* Modals */
 .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 20000; justify-content: center; align-items: center; cursor: pointer; }
-.modal-content { background: #1c2541; width: 90%; max-width: 450px; padding: 25px; border-radius: 12px; position: relative; border: 1px solid #5bc0be; line-height: 1.6; cursor: default; max-height: 90vh; overflow-y: auto; }
+.modal-content { background: #1c2541; width: 90%; max-width: 450px; padding: 25px; border-radius: 12px; position: relative; border: 1px solid #5bc0be; line-height: 1.6; cursor: default; }
 .close-modal { position: absolute; top: 10px; right: 15px; font-size: 24px; cursor: pointer; color: #8b949e; }
 .score-big { font-size: 2.5rem; text-align: center; color: #fff; margin: 10px 0; font-weight: bold; }
-.detail-table { width: 100%; font-size: 0.85rem; border-collapse: collapse; margin-top: 10px; margin-bottom: 15px; }
+.detail-table { width: 100%; font-size: 0.85rem; border-collapse: collapse; margin-top: 10px; }
 .detail-table th, .detail-table td { text-align: left; padding: 8px; border-bottom: 1px solid #30363d; }
 
 /* Map */
 #map-screen { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 9999; background: #000; }
 #map { width: 100%; height: 100%; background: #000; }
 #back-btn { position: absolute; top: 90px; left: 10px; z-index: 10000; background: #21262d; border: 1px solid #30363d; color: white; padding: 8px 16px; }
+
+/* Loading Text (v t1.0.31 Format) */
+.loading-text { opacity: 0.6; font-size: 1rem; color: #8b949e; }
+.loading-text i { font-style: italic; }
 </style>
 </head>
 <body onkeydown="closeWelcome()" onclick="closeWelcome(); closeAllLists();">
@@ -99,14 +88,9 @@ input:checked + .slider:before { transform: translateX(22px); }
 <div id="home-screen" class="container">
     <div class="header-area">
         <div class="title-row">
-            <h1>🌌 Aurora Forecast Pro<span class="beta-suffix">(beta)</span> <span class="version">v t1.1.15</span></h1>
+            <h1>🌌 Aurora Forecast Pro<span class="beta-suffix">(beta)</span> <span class="version">v t1.1.16</span></h1>
         </div>
         <div class="produce-by">Produce by Shin</div>
-    </div>
-
-    <div class="card" style="border: 1px dashed #5bc0be !important; margin-bottom: 20px;">
-        <div class="label-main" style="font-size: 0.9rem;">App Settings</div>
-        <button id="btn-notif-test" style="background: #ca8a04 !important;" onclick="testNotification(); event.stopPropagation();">Send Test Notification (10s delay)</button>
     </div>
 
     <div class="card" id="card-loc">
@@ -119,27 +103,27 @@ input:checked + .slider:before { transform: translateX(22px); }
             <button id="btn-search" onclick="searchCity(); event.stopPropagation();" disabled>Set</button>
             <div id="autocomplete-list" class="autocomplete-items"></div>
         </div>
-        <div id="search-error" class="error-msg">City not found. Please check your input.</div>
+        <div id="search-error" class="error-msg">City not found.</div>
     </div>
 
     <div class="card" id="card-main-result">
-        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-            <div style="flex: 1;">
-                <div id="total-label" class="label-main">Overall Probability</div>
-                <div id="total-sub-label" class="label-sub-current">Current:</div>
-            </div>
-            <div style="display: flex; flex-direction: column; align-items: flex-end; z-index: 20;">
-                <span class="switch-label">Notification</span>
-                <label class="switch">
-                    <input type="checkbox" id="notif-toggle" onchange="handleNotifToggle(this)">
-                    <span class="slider"></span>
-                </label>
-            </div>
+        <div class="label-main">Overall Probability</div>
+        <div id="total-sub-label" class="label-sub-current">Current:</div>
+        
+        <div class="notif-container">
+            <span class="switch-label">Notification</span>
+            <label class="switch">
+                <input type="checkbox" id="notif-toggle" onchange="handleNotifToggle(this)">
+                <span class="slider"></span>
+            </label>
         </div>
+
         <div id="result" class="badge badge-large low">--</div>
+        
         <div style="margin-top: 15px;">
             <button onclick="openModal(); event.stopPropagation();" style="font-size: 0.85em; background: #1c2541; border: 1px solid #3a506b; padding: 8px 16px;">View Details</button>
         </div>
+        
         <button id="btn-update-all" class="refresh-btn" onclick="updateAll(); event.stopPropagation();">Update All</button>
         <div id="time-update-all" class="last-updated"></div>
     </div>
@@ -147,7 +131,7 @@ input:checked + .slider:before { transform: translateX(22px); }
     <button id="toggle-data-btn" class="toggle-btn" onclick="toggleData(); event.stopPropagation();">Show All Information</button>
 
     <div id="hidden-data">
-        <div class="card" id="card-oval">
+        <div class="card">
             <div class="label-main">Aurora Oval</div>
             <div class="label-sub-current">Current:</div>
             <div id="oval" class="badge low">--</div>
@@ -157,31 +141,31 @@ input:checked + .slider:before { transform: translateX(22px); }
             <div id="time-oval" class="last-updated"></div>
         </div>
 
-        <div class="card" id="card-kp-group">
+        <div class="card">
             <div class="label-main">Kp Index</div>
             <div class="label-sub-current">Current:</div>
             <div id="kp" class="badge low">--</div>
             <button id="btn-refresh-kp" class="refresh-btn" onclick="refreshItem('kp'); event.stopPropagation();">Refresh</button>
             <div id="time-kp" class="last-updated"></div>
-            <div class="sub-section" id="card-kp3">
+            <div class="sub-section">
                 <div style="font-size: 0.8rem; color: #8b949e; margin-bottom: 5px;">Short Forecast:</div>
                 <div id="kp-short" class="value" style="font-size: 1rem;">--</div>
-                <pre id="kpForecast" style="margin-top:10px;">--</pre>
-                <button id="btn-refresh-kp3" class="sub-refresh-btn" onclick="refreshItem('kp3'); event.stopPropagation();">Refresh</button>
+                <pre id="kpForecast">--</pre>
+                <button onclick="refreshItem('kp3'); event.stopPropagation();" class="sub-refresh-btn">Refresh</button>
                 <div id="time-kp3" class="last-updated"></div>
             </div>
         </div>
 
-        <div class="card" id="card-cloud-group">
+        <div class="card">
             <div class="label-main">Cloud Cover</div>
             <div class="label-sub-current">Current:</div>
             <div id="cloud" class="badge low">--</div>
             <button id="btn-refresh-cloud" class="refresh-btn" onclick="refreshItem('cloud'); event.stopPropagation();">Refresh</button>
             <div id="time-cloud" class="last-updated"></div>
-            <div class="sub-section" id="card-short">
+            <div class="sub-section">
                 <div style="font-size: 0.8rem; color: #8b949e; margin-bottom: 5px;">Short Forecast:</div>
                 <div id="forecast" class="value" style="font-size: 1rem;">--</div>
-                <button id="btn-refresh-short" class="sub-refresh-btn" onclick="refreshItem('short'); event.stopPropagation();">Refresh</button>
+                <button onclick="refreshItem('short'); event.stopPropagation();" class="sub-refresh-btn">Refresh</button>
                 <div id="time-short" class="last-updated"></div>
             </div>
         </div>
@@ -191,29 +175,15 @@ input:checked + .slider:before { transform: translateX(22px); }
 <div id="detailModal" class="modal-overlay" onclick="closeModal()">
     <div class="modal-content" onclick="event.stopPropagation()">
         <span class="close-modal" onclick="closeModal()">&times;</span>
-        <div class="modal-title" id="modal-label-title">Probability Details</div>
+        <div style="color:#5bc0be; font-weight:bold;">Probability Details</div>
         <div class="score-big"><span id="score-pct">--</span></div>
-        <div style="font-size: 0.85rem; margin-bottom: 15px;">
-            <div style="border: 1px solid #3a506b; border-radius: 8px; padding: 10px; margin-bottom: 15px; background: #0b132b;">
-                <strong style="color: #5bc0be;">Thresholds:</strong>
-                <ul style="margin: 5px 0; padding-left: 20px;">
-                    <li><span style="color: #dc2626;">High</span>: 70% or more</li>
-                    <li><span style="color: #ca8a04;">Possible</span>: 35% to 69%</li>
-                    <li><span style="color: #8b949e;">Low</span>: Under 35%</li>
-                </ul>
-            </div>
-            <strong>Optimized Logic (v t1.0.13+):</strong>
-            <table class="detail-table">
-                <tr><th>Item</th><th>Max</th><th>Details</th></tr>
-                <tr><td>Oval/Horizon</td><td>45</td><td>Base prob + Viewline bonus</td></tr>
-                <tr><td>Magnetic</td><td>40</td><td>Kp Index sensitivity adjusted</td></tr>
-                <tr><td>Sky</td><td>15</td><td>Clear sky impact</td></tr>
-            </table>
-            <p style="margin-top:10px; color: #ffab70; font-size: 0.8rem;">
-                * <strong>Cloud Impact:</strong> If cloud cover exceeds 70%, the score is significantly reduced. If it exceeds 85%, the result is forced to "Low".<br><br>
-                * <strong>Cloud Icon (☁️):</strong> This icon appears <strong>only when</strong> the aurora potential is "Possible" or "High" but the view is currently blocked by heavy cloud cover.
-            </p>
-        </div>
+        <table class="detail-table">
+            <tr><th>Factor</th><th>Score</th></tr>
+            <tr><td>Oval/Location</td><td>Max 45</td></tr>
+            <tr><td>Magnetic (Kp)</td><td>Max 40</td></tr>
+            <tr><td>Sky Condition</td><td>Max 15</td></tr>
+        </table>
+        <p style="font-size:0.75rem; color:#8b949e; margin-top:15px;">* Heavy clouds (>70%) significantly reduce visibility score.</p>
     </div>
 </div>
 
@@ -221,22 +191,13 @@ input:checked + .slider:before { transform: translateX(22px); }
     <div class="modal-content" onclick="event.stopPropagation()">
         <span class="close-modal" onclick="closeNotifModal()">&times;</span>
         <div style="color:#5bc0be; font-weight:bold; margin-bottom:15px;">Notification Settings</div>
-        <label style="display:block; margin-bottom:12px; cursor:pointer;"><input type="radio" name="notif-loc-type" value="current" checked onchange="toggleNotifSearch(false)"> Current location</label>
-        <label style="display:block; margin-bottom:8px; cursor:pointer;"><input type="radio" name="notif-loc-type" value="another" onchange="toggleNotifSearch(true)"> Select another</label>
-        <div id="notif-search-ui" class="search-disabled" style="margin-top:10px;">
-            <div class="search-container" style="width: 100%;">
-                <input id="notifCityInput" placeholder="Search City..." oninput="handleCityInput(this)" style="width: calc(100% - 90px);">
-                <div id="notif-autocomplete-list" class="autocomplete-items" style="right: 90px;"></div>
-            </div>
-        </div>
-        <div style="margin-top:20px; text-align:right;">
-            <button id="btn-notif-done" onclick="saveNotifSettings()" style="background:#5bc0be; color:#0b132b; padding:8px 20px;">Done</button>
-        </div>
+        <p>Notifications are now enabled for this location.</p>
+        <button onclick="saveNotifSettings()" style="background:#5bc0be; color:#0b132b; width:100%; padding:10px;">OK</button>
     </div>
 </div>
 
 <div id="map-screen">
-    <button class="btn" id="back-btn" onclick="hideMapScreen();">← Back</button>
+    <button id="back-btn" onclick="hideMapScreen();">← Back</button>
     <div id="map"></div>
 </div>
 
@@ -247,91 +208,27 @@ const KP_URL = "https://services.swpc.noaa.gov/products/noaa-planetary-k-index.j
 const OVAL_URL = "https://services.swpc.noaa.gov/json/ovation_aurora_latest.json";
 const FORECAST_URL = "https://services.swpc.noaa.gov/text/3-day-forecast.txt";
 
-let myLat = null, myLon = null, lastAuroraProb = 0, cachedAuroraData = null;
+let myLat = null, myLon = null, lastAuroraProb = 0, currentTotalScore = 0;
 let map = null, auroraLayer = null, userMarker = null, cloudDataHourly = null;
-let currentTotalScore = 0, lastScrollPos = 0, searchTimer = null, isNotifSettingsSaved = false;
+let searchTimer = null, cachedAuroraData = null;
 
 function formatProbability(score) {
     const rounded = Math.round(score);
-    if (rounded <= 0) return "< 1 %";
-    if (rounded >= 100) return "> 99 %";
-    return rounded + " %";
+    return rounded <= 0 ? "< 1 %" : (rounded >= 100 ? "> 99 %" : rounded + " %");
 }
+
+function openModal() { document.getElementById("detailModal").style.display = "flex"; }
+function closeModal() { document.getElementById("detailModal").style.display = "none"; }
+function closeNotifModal() { document.getElementById("notifModal").style.display = "none"; }
+function saveNotifSettings() { localStorage.setItem('notifEnabled', 'true'); closeNotifModal(); }
 
 async function handleNotifToggle(el) {
     if (el.checked) {
         if (await Notification.requestPermission() === "granted") {
-            isNotifSettingsSaved = false;
             document.getElementById("notifModal").style.display = "flex";
-            updateDoneButtonState();
         } else { el.checked = false; alert("Please enable notifications."); }
     } else localStorage.setItem('notifEnabled', 'false');
 }
-
-function closeNotifModal() { if (!isNotifSettingsSaved) document.getElementById("notif-toggle").checked = false; document.getElementById("notifModal").style.display = "none"; }
-function saveNotifSettings() {
-    isNotifSettingsSaved = true; localStorage.setItem('notifEnabled', 'true');
-    const radioAnother = document.querySelector('input[name="notif-loc-type"][value="another"]');
-    let locName = radioAnother.checked ? document.getElementById("notifCityInput").value : document.getElementById("loc").textContent;
-    alert(`Notification set for:\n${locName}`); document.getElementById("notifModal").style.display = "none";
-}
-function toggleNotifSearch(enabled) { document.getElementById("notif-search-ui").className = enabled ? "" : "search-disabled"; updateDoneButtonState(); }
-function updateDoneButtonState() {
-    const radioAnother = document.querySelector('input[name="notif-loc-type"][value="another"]');
-    const doneBtn = document.getElementById("btn-notif-done");
-    doneBtn.disabled = radioAnother.checked ? (document.getElementById("notifCityInput").value.trim() === "" || myLat === null) : (myLat === null);
-    doneBtn.style.opacity = doneBtn.disabled ? "0.3" : "1";
-}
-
-async function testNotification() {
-    if (await Notification.requestPermission() === "granted") {
-        const btn = document.getElementById("btn-notif-test");
-        btn.textContent = "Wait 10s..."; btn.disabled = true;
-        setTimeout(async () => {
-            const reg = await navigator.serviceWorker.ready;
-            await reg.showNotification("🌌 Test Alert", { body: "High priority test!", icon: "icon.png" });
-            btn.textContent = "Send Test Notification (10s delay)"; btn.disabled = false;
-        }, 10000);
-    }
-}
-
-function closeWelcome() { document.getElementById('welcome-overlay').style.display = 'none'; }
-function toggleData() {
-    const h = document.getElementById("hidden-data"), btn = document.getElementById("toggle-data-btn");
-    const isH = h.style.display !== "block"; h.style.display = isH ? "block" : "none";
-    btn.textContent = isH ? "Show Less Information" : "Show All Information";
-}
-
-function handleCityInput(el) {
-    const isN = el.id === "notifCityInput", val = el.value.trim();
-    if (!isN) { document.getElementById("btn-search").disabled = val.length === 0; document.getElementById("search-error").style.opacity = "0"; }
-    clearTimeout(searchTimer);
-    if (val.length < 2) { closeAllLists(); return; }
-    searchTimer = setTimeout(async () => {
-        try {
-            const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(val)}&count=5&language=en`);
-            const data = await res.json(); showAutocomplete(data.results, isN);
-        } catch (e) {}
-    }, 300);
-}
-
-function showAutocomplete(results, isN) {
-    closeAllLists(); if (!results) return;
-    const list = document.getElementById(isN ? "notif-autocomplete-list" : "autocomplete-list");
-    results.forEach(res => {
-        const item = document.createElement("div"); item.className = "autocomplete-item";
-        const fullName = `${res.name}, ${res.country}`;
-        item.innerHTML = `<strong>${res.name}</strong>, ${res.admin1 || ''} ${res.country}`;
-        item.onclick = (e) => {
-            e.stopPropagation(); myLat = res.latitude; myLon = res.longitude;
-            document.getElementById(isN ? "notifCityInput" : "cityInput").value = fullName;
-            document.getElementById("loc").textContent = fullName;
-            closeAllLists(); updateAll(); updateDoneButtonState(); closeWelcome();
-        };
-        list.appendChild(item);
-    });
-}
-function closeAllLists() { ["autocomplete-list", "notif-autocomplete-list"].forEach(id => { const el = document.getElementById(id); if(el) el.innerHTML = ""; }); }
 
 function setItemLoading(id, isLoading) {
     const el = document.getElementById(id); if (!el) return;
@@ -339,65 +236,38 @@ function setItemLoading(id, isLoading) {
 }
 
 function updateTimestamp(id) {
-    const now = new Date(); const pad = (n) => String(n).padStart(2, '0');
-    const f = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+    const now = new Date();
+    const f = `${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}:${now.getSeconds().toString().padStart(2,'0')}`;
     const el = document.getElementById(id); if (el) el.textContent = `Last Update: ${f}`;
-}
-
-async function getLocation() {
-    setItemLoading('loc', true); document.getElementById('btn-gps').classList.add('loading-btn');
-    navigator.geolocation.getCurrentPosition(async p => {
-        myLat = p.coords.latitude; myLon = p.coords.longitude;
-        await reverseGeocode(myLat, myLon); updateAll(); updateDoneButtonState();
-        document.getElementById('btn-gps').classList.remove('loading-btn'); closeWelcome();
-    }, err => { alert("GPS Failed"); document.getElementById('loc').textContent = "Not Set"; document.getElementById('btn-gps').classList.remove('loading-btn'); });
-}
-
-async function searchCity() {
-    const city = document.getElementById("cityInput").value, err = document.getElementById("search-error");
-    if(err) err.style.opacity = "0"; setItemLoading('loc', true); document.getElementById('btn-search').classList.add('loading-btn');
-    try {
-        const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=en`);
-        const data = await res.json();
-        if (data.results?.length > 0) {
-            const r = data.results[0]; myLat = r.latitude; myLon = r.longitude;
-            const f = `${r.name}, ${r.country}`; document.getElementById("loc").textContent = f;
-            updateAll(); updateDoneButtonState(); closeWelcome();
-        } else { document.getElementById('loc').textContent = "Not Set"; if(err) err.style.opacity = "1"; }
-    } catch (e) { alert("Search Error"); }
-    document.getElementById('btn-search').classList.remove('loading-btn');
-}
-
-async function updateAll() {
-    if (myLat === null) return;
-    const btn = document.getElementById('btn-update-all'); if(btn) btn.classList.add('loading-btn');
-    ["result", "kp", "oval", "cloud"].forEach(id => setItemLoading(id, true));
-    await Promise.all([getKp(), fetchKp3DayForecast(), checkOval(), getCloud(), shortForecast()]);
-    calculateTotal(); if(btn) btn.classList.remove('loading-btn'); updateTimestamp('time-update-all');
-}
-
-async function refreshItem(type) {
-    if (myLat === null) return;
-    const loadMapping = { kp: 'kp', kp3: 'kp-short', oval: 'oval', cloud: 'cloud', short: 'forecast' };
-    setItemLoading(loadMapping[type], true);
-    const btn = document.getElementById(`btn-refresh-${type}`); if(btn) btn.classList.add('loading-btn');
-    if (type === 'kp') await getKp(); if (type === 'kp3') await fetchKp3DayForecast(); if (type === 'oval') await checkOval(); if (type === 'cloud') await getCloud(); if (type === 'short') await shortForecast();
-    calculateTotal(); if(btn) btn.classList.remove('loading-btn'); updateTimestamp(`time-${type}`);
 }
 
 function calculateTotal() {
     const hr = new Date().getHours(), resultEl = document.getElementById("result"), sub = document.getElementById("total-sub-label");
-    let isNight = (hr >= 21 || hr < 3); sub.textContent = isNight ? "Current:" : "at 21:00:";
+    let isNight = (hr >= 21 || hr < 3);
+    sub.textContent = isNight ? "Current:" : "at 21:00:";
+    
     let evalKp = parseFloat(document.getElementById("kp").dataset.value) || 0;
     let evalCloud = (!isNight && cloudDataHourly) ? cloudDataHourly[21] : (parseInt(document.getElementById("cloud").dataset.value) || 0);
+    
     let ovalScore = Math.min(45, (lastAuroraProb * 1.2) + (lastAuroraProb === 0 ? 5 : 10));
-    let kpScore = Math.min(40, evalKp * 12 + (evalKp >= 3 ? 5 : 0));
+    let kpScore = Math.min(40, evalKp * 12);
     let pot = (ovalScore + kpScore + 15) * (lastAuroraProb > 0 ? 1.0 : (evalKp >= 4 ? 0.3 : 0));
+    
     currentTotalScore = Math.min(100, pot * (evalCloud > 85 ? 0.1 : (evalCloud > 70 ? 0.4 : 1.0)));
-    const tag = (pot >= 35 && currentTotalScore < 35 && evalCloud > 70) ? '<span class="cloud-icon">☁️</span>' : '';
+    document.getElementById("score-pct").textContent = Math.round(currentTotalScore) + "%";
+
     if (currentTotalScore >= 70) { resultEl.innerHTML = "High"; resultEl.className = "badge badge-large high"; }
     else if (currentTotalScore >= 35) { resultEl.innerHTML = "Possible"; resultEl.className = "badge badge-large mid"; }
-    else { resultEl.innerHTML = `Low${tag}`; resultEl.className = "badge badge-large low"; }
+    else { resultEl.innerHTML = "Low"; resultEl.className = "badge badge-large low"; }
+}
+
+async function getLocation() {
+    setItemLoading('loc', true);
+    navigator.geolocation.getCurrentPosition(async p => {
+        myLat = p.coords.latitude; myLon = p.coords.longitude;
+        await reverseGeocode(myLat, myLon); updateAll();
+        document.getElementById('welcome-overlay').style.display = 'none';
+    }, () => { document.getElementById('loc').textContent = "GPS Failed"; });
 }
 
 async function reverseGeocode(lat, lon) {
@@ -407,87 +277,114 @@ async function reverseGeocode(lat, lon) {
     } catch (e) { document.getElementById("loc").textContent = `${lat.toFixed(2)}, ${lon.toFixed(2)}`; }
 }
 
+function handleCityInput(el) {
+    clearTimeout(searchTimer);
+    const val = el.value.trim();
+    if (val.length < 2) { closeAllLists(); return; }
+    searchTimer = setTimeout(async () => {
+        const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(val)}&count=5&language=en`);
+        const data = await res.json(); showAutocomplete(data.results);
+    }, 300);
+    document.getElementById("btn-search").disabled = val.length === 0;
+}
+
+function showAutocomplete(results) {
+    closeAllLists(); if (!results) return;
+    const list = document.getElementById("autocomplete-list");
+    results.forEach(res => {
+        const item = document.createElement("div"); item.className = "autocomplete-item";
+        item.innerHTML = `${res.name}, ${res.country}`;
+        item.onclick = () => {
+            myLat = res.latitude; myLon = res.longitude;
+            document.getElementById("cityInput").value = `${res.name}, ${res.country}`;
+            document.getElementById("loc").textContent = `${res.name}, ${res.country}`;
+            closeAllLists(); updateAll(); closeWelcome();
+        };
+        list.appendChild(item);
+    });
+}
+function closeAllLists() { document.getElementById("autocomplete-list").innerHTML = ""; }
+function closeWelcome() { document.getElementById('welcome-overlay').style.display = 'none'; }
+function toggleData() {
+    const h = document.getElementById("hidden-data"), btn = document.getElementById("toggle-data-btn");
+    const isH = h.style.display !== "block"; h.style.display = isH ? "block" : "none";
+    btn.textContent = isH ? "Show Less Information" : "Show All Information";
+}
+
+async function updateAll() {
+    if (myLat === null) return;
+    ["result", "kp", "oval", "cloud"].forEach(id => setItemLoading(id, true));
+    await Promise.all([getKp(), fetchKp3DayForecast(), checkOval(), getCloud(), shortForecast()]);
+    calculateTotal(); updateTimestamp('time-update-all');
+}
+
+async function refreshItem(type) {
+    if (myLat === null) return;
+    const map = { kp:'kp', kp3:'kp-short', oval:'oval', cloud:'cloud', short:'forecast' };
+    setItemLoading(map[type], true);
+    if (type==='kp') await getKp(); if (type==='kp3') await fetchKp3DayForecast(); if (type==='oval') await checkOval(); if (type==='cloud') await getCloud(); if (type==='short') await shortForecast();
+    calculateTotal(); updateTimestamp(`time-${type}`);
+}
+
 async function getKp() {
-    try {
-        const res = await fetch(CORS + encodeURIComponent(KP_URL)), d = await res.json(), val = parseFloat(d[d.length - 1][1]);
-        const el = document.getElementById("kp"); el.textContent = val.toFixed(1); el.dataset.value = val;
-        el.className = `badge ${val >= 5 ? "high" : (val >= 3 ? "mid" : "low")}`; updateTimestamp('time-kp'); return val;
-    } catch(e) { return 0; }
+    const res = await fetch(CORS + encodeURIComponent(KP_URL)), d = await res.json(), val = parseFloat(d[d.length-1][1]);
+    const el = document.getElementById("kp"); el.textContent = val.toFixed(1); el.dataset.value = val;
+    el.className = `badge ${val >= 5 ? "high" : (val >= 3 ? "mid" : "low")}`; return val;
 }
 
 async function fetchKp3DayForecast() {
-    try {
-        const res = await fetch(CORS + encodeURIComponent(FORECAST_URL)), t = await res.text(), m = t.match(/NOAA Kp index breakdown[\s\S]*?(?=\n[A-Z]|$)/i);
-        document.getElementById("kpForecast").innerText = m ? m[0].trim() : "Updating...";
-        document.getElementById("kp-short").innerHTML = `<div>Ref 3-day forecast (NOAA)</div>`; updateTimestamp('time-kp3');
-    } catch(e) {}
+    const res = await fetch(CORS + encodeURIComponent(FORECAST_URL)), t = await res.text(), m = t.match(/NOAA Kp index breakdown[\s\S]*?(?=\n[A-Z]|$)/i);
+    document.getElementById("kpForecast").innerText = m ? m[0].trim() : "Updating...";
+    document.getElementById("kp-short").innerHTML = `<div>Ref 3-day forecast (NOAA)</div>`;
 }
 
 async function checkOval() {
-    try {
-        const res = await fetch(CORS + encodeURIComponent(OVAL_URL)), d = await res.json(); cachedAuroraData = d;
-        if (map) drawAurora(d); let best = 0, minD = 999;
-        d.coordinates.forEach(p => { let diff = Math.abs(myLat - p[1]) + Math.abs(myLon - (p[0] > 180 ? p[0] - 360 : p[0])); if (diff < minD) { minD = diff; best = p[2]; } });
-        lastAuroraProb = best; document.getElementById("oval-prob").textContent = `Probability at your location: ${best}%`;
-        const el = document.getElementById("oval"); el.textContent = best >= 10 ? "Inside/Near Oval" : "Outside Oval";
-        el.className = `badge ${best >= 10 ? "high" : "low"}`; updateTimestamp('time-oval');
-    } catch(e) {}
+    const res = await fetch(CORS + encodeURIComponent(OVAL_URL)), d = await res.json(); cachedAuroraData = d;
+    let best = 0, minD = 999;
+    d.coordinates.forEach(p => { let diff = Math.abs(myLat-p[1]) + Math.abs(myLon-(p[0]>180?p[0]-360:p[0])); if(diff<minD){ minD=diff; best=p[2]; } });
+    lastAuroraProb = best; document.getElementById("oval-prob").textContent = `Local Probability: ${best}%`;
+    const el = document.getElementById("oval"); el.textContent = best >= 10 ? "Inside Oval" : "Outside Oval";
+    el.className = `badge ${best >= 10 ? "high" : "low"}`;
 }
 
 async function getCloud() {
-    try {
-        const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${myLat}&longitude=${myLon}&current=cloudcover`), d = await res.json(), val = d.current.cloudcover;
-        const el = document.getElementById("cloud"); el.textContent = formatProbability(val); el.dataset.value = val;
-        el.className = `badge ${val <= 20 ? "high" : (val <= 60 ? "mid" : "low")}`; updateTimestamp('time-cloud'); return val;
-    } catch(e) { return 100; }
+    const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${myLat}&longitude=${myLon}&current=cloudcover`), d = await res.json(), val = d.current.cloudcover;
+    const el = document.getElementById("cloud"); el.textContent = formatProbability(val); el.dataset.value = val;
+    el.className = `badge ${val <= 20 ? "high" : (val <= 60 ? "mid" : "low")}`; return val;
 }
 
 async function shortForecast() {
-    try {
-        const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${myLat}&longitude=${myLon}&hourly=cloudcover`), d = await res.json();
-        cloudDataHourly = d.hourly.cloudcover; const hr = new Date().getHours();
-        let html = (hr >= 21 || hr < 3) ? `<div>🕒 In 3h: Clouds ${formatProbability(cloudDataHourly[3])}</div>` : `<div>🌙 Tonight(21:00): Clouds ${formatProbability(cloudDataHourly[21])}</div>`;
-        html += `<div>📅 Tomorrow(21:00): Clouds ${formatProbability(cloudDataHourly[45])}</div>`;
-        document.getElementById("forecast").innerHTML = html; updateTimestamp('time-short');
-    } catch(e) {}
+    const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${myLat}&longitude=${myLon}&hourly=cloudcover`), d = await res.json();
+    cloudDataHourly = d.hourly.cloudcover; const hr = new Date().getHours();
+    let html = (hr >= 21 || hr < 3) ? `<div>🕒 In 3h: Cloud ${formatProbability(cloudDataHourly[3])}</div>` : `<div>🌙 Tonight(21:00): Cloud ${formatProbability(cloudDataHourly[21])}</div>`;
+    html += `<div>📅 Tomorrow(21:00): Cloud ${formatProbability(cloudDataHourly[45])}</div>`;
+    document.getElementById("forecast").innerHTML = html;
 }
 
 function showMapScreen() { 
-    lastScrollPos = window.pageYOffset; document.getElementById('home-screen').style.display = 'none'; 
-    document.getElementById('map-screen').style.display = 'block'; 
-    if (!map) initMap(); else { updateMapMarker(); setTimeout(() => map.invalidateSize(), 50); }
-    window.scrollTo(0,0);
+    document.getElementById('home-screen').style.display = 'none'; document.getElementById('map-screen').style.display = 'block'; 
+    if (!map) initMap(); else { updateMapMarker(); setTimeout(()=>map.invalidateSize(), 50); }
 }
-function hideMapScreen() { document.getElementById('map-screen').style.display = 'none'; document.getElementById('home-screen').style.display = 'block'; window.scrollTo(0, lastScrollPos); }
-
-function updateMapMarker() {
-    if (!map || myLat === null) return;
-    if (userMarker) userMarker.setLatLng([myLat, myLon]);
-    else userMarker = L.circleMarker([myLat, myLon], { color: '#5bc0be', radius: 7, weight: 3, fillOpacity: 1.0, pane: 'markerPane' }).addTo(map);
-    userMarker.bringToFront(); map.setView([myLat, myLon], map.getZoom());
-}
-
+function hideMapScreen() { document.getElementById('map-screen').style.display = 'none'; document.getElementById('home-screen').style.display = 'block'; }
 function initMap() { 
-    map = L.map('map', { maxBounds: L.latLngBounds(L.latLng(-85, -360), L.latLng(85, 720)), maxBoundsViscosity: 1.0, minZoom: 2 }).setView([myLat || 70, myLon || 0], 3); 
+    map = L.map('map').setView([myLat || 70, myLon || 0], 3); 
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map); 
     auroraLayer = L.layerGroup().addTo(map); if (cachedAuroraData) drawAurora(cachedAuroraData); updateMapMarker(); 
 }
-
-function drawAurora(data) { 
-    auroraLayer.clearLayers(); 
-    data.coordinates.forEach(p => { 
-        if (p[2] > 10) { 
-            let lon = p[0] > 180 ? p[0] - 360 : p[0], color = p[2] > 50 ? '#ff4500' : (p[2] > 25 ? '#ffff00' : '#00ff00'); 
-            [-360, 0, 360].forEach(off => L.rectangle([[p[1], lon + off], [p[1] + 2, lon + off + 2]], { color: color, weight: 0, fillOpacity: p[2] / 100, interactive: false }).addTo(auroraLayer)); 
-        } 
-    });
-    if (userMarker) userMarker.bringToFront();
+function updateMapMarker() {
+    if (userMarker) userMarker.setLatLng([myLat, myLon]);
+    else userMarker = L.circleMarker([myLat, myLon], { color: '#5bc0be', radius: 7 }).addTo(map);
+    map.setView([myLat, myLon]);
 }
-
-function closeModal() { document.getElementById("detailModal").style.display = "none"; }
-function closeNotifModal() { document.getElementById("notifModal").style.display = "none"; if (!isNotifSettingsSaved) document.getElementById("notif-toggle").checked = false; }
-
-setInterval(() => { if (myLat !== null) updateAll(); }, 900000);
+function drawAurora(data) {
+    auroraLayer.clearLayers();
+    data.coordinates.forEach(p => {
+        if (p[2] > 10) {
+            let lon = p[0] > 180 ? p[0] - 360 : p[0];
+            L.rectangle([[p[1], lon], [p[1]+2, lon+2]], { color: p[2]>50?'#ff4500':'#00ff00', weight:0, fillOpacity: p[2]/100 }).addTo(auroraLayer);
+        }
+    });
+}
 </script>
 </body>
 </html>
