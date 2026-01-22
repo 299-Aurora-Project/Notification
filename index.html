@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Aurora Forecast Pro v t1.1.1</title>
+<title>Aurora Forecast Pro v t1.1.2</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#0b132b">
 <link rel="apple-touch-icon" href="icon.png">
@@ -82,7 +82,7 @@ pre { background:#0b132b; padding:12px; border-radius:8px; font-family: monospac
 <div id="home-screen" class="container">
     <div class="header-area">
         <div class="title-row">
-            <h1>🌌 Aurora Forecast Pro<span class="beta-suffix">(beta)</span> <span class="version">v t1.1.1</span></h1>
+            <h1>🌌 Aurora Forecast Pro<span class="beta-suffix">(beta)</span> <span class="version">v t1.1.2</span></h1>
         </div>
         <div class="produce-by">Produce by Shin</div>
     </div>
@@ -215,22 +215,31 @@ if ('serviceWorker' in navigator) {
 }
 
 /* 通知ロジック */
-/* v t1.1.1 */
+/* v t1.1.2 */
 async function testNotification() {
-    console.log("Notification button clicked"); // ログ追加
+    console.log("Notification button clicked");
     
     if (!("Notification" in window)) {
         alert("This browser does not support desktop notification");
         return;
     }
 
+    // 現在の状態を詳しくログ出力
+    console.log("Current permission state:", Notification.permission);
+
+    // すでに denied の場合、Notification.requestPermission() はダイアログを出さずに即座に denied を返します
+    if (Notification.permission === "denied") {
+        console.error("Permission is already denied. You must reset permission in site settings.");
+        alert("権限が「ブロック」されています。ブラウザのURLバー横にある『鍵マーク』をクリックして、通知設定をリセットしてからページを再読み込みしてください。");
+        return;
+    }
+
     const permission = await Notification.requestPermission();
-    console.log("Permission status:", permission); // 状況をログに表示
+    console.log("Result of requestPermission():", permission);
 
     if (permission === "granted") {
         try {
             const registration = await navigator.serviceWorker.ready;
-            console.log("SW Ready, attempting to show notification...");
             await registration.showNotification("Aurora Forecast Test", {
                 body: "Notification system is working correctly!",
                 icon: "icon.png",
@@ -241,10 +250,9 @@ async function testNotification() {
             console.error("Failed to show notification:", error);
         }
     } else {
-        alert("Permission denied. Please enable notifications in site settings.");
+        alert(`Permission ${permission}: 通知が許可されませんでした。OSやブラウザ全体の設定を確認してください。`);
     }
 }
-
 function checkAndNotify(score, statusText) {
     const lastNotifyDate = localStorage.getItem('lastNotifyDate');
     const today = new Date().toDateString();
@@ -449,5 +457,6 @@ function drawAurora(data) { auroraLayer.clearLayers(); data.coordinates.forEach(
 </script>
 </body>
 </html>
+
 
 
