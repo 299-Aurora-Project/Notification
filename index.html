@@ -310,13 +310,29 @@ async function testNotification() {
     const permission = await Notification.requestPermission();
     if (permission === "granted") {
         try {
-            const registration = await navigator.serviceWorker.ready;
-            await registration.showNotification("Aurora Forecast Pro", {
-                body: "Mobile notification is working!",
-                icon: "icon.png",
-                badge: "icon.png",
-                vibrate: [200, 100, 200]
-            });
+            // ユーザーへのフィードバック
+            const btn = document.getElementById("btn-notif-test");
+            const originalText = btn.textContent;
+            btn.textContent = "Waiting 10s...";
+            btn.disabled = true;
+
+            // 10秒待機してから通知を実行
+            setTimeout(async () => {
+                const registration = await navigator.serviceWorker.ready;
+                await registration.showNotification("Aurora Forecast Pro", {
+                    body: "10-second background test successful!",
+                    icon: "icon.png",
+                    badge: "icon.png",
+                    vibrate: [200, 100, 200],
+                    // Androidでポップアップ（バナー）が出やすくなる設定
+                    priority: "high", 
+                    tag: "test-notif"
+                });
+                // ボタンを元に戻す
+                btn.textContent = originalText;
+                btn.disabled = false;
+            }, 10000); // 10000ミリ秒 = 10秒
+
         } catch (error) {
             alert("Notification failed: Ensure you have added this app to your Home Screen.");
         }
@@ -536,6 +552,7 @@ function drawAurora(data) { auroraLayer.clearLayers(); data.coordinates.forEach(
 </script>
 </body>
 </html>
+
 
 
 
