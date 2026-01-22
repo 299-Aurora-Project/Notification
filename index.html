@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Aurora Forecast Pro v t1.1.12</title>
+<title>Aurora Forecast Pro v t1.1.13</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#0b132b">
 <link rel="apple-touch-icon" href="icon.png">
@@ -55,14 +55,32 @@ input:checked + .slider:before { transform: translateX(22px); }
 .toggle-btn { width: 100%; margin-bottom: 20px; background: #1c2541; border: 1px solid #3a506b; color: #5bc0be; }
 #hidden-data { display: none; }
 pre { background:#0b132b; padding:12px; border-radius:8px; font-family: monospace; font-size: 0.85em; overflow-x: auto; border: 1px solid #3a506b; }
+
+/* 矢印アニメーションの復旧 */
+@keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-15px); }
+}
+.arrow-bounce { animation: bounce 1.2s infinite; color: #5bc0be; font-size: 2.5rem; }
+.arrow-delay1 { animation-delay: 0.2s; }
+.arrow-delay2 { animation-delay: 0.4s; }
 </style>
 </head>
 <body onclick="closeAllLists();">
 
+<div id="welcome-overlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 30000; display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer;" onclick="this.style.display='none'">
+    <div style="display: flex; gap: 15px; margin-bottom: 15px;">
+        <div class="arrow-bounce">↑</div>
+        <div class="arrow-bounce arrow-delay1">↑</div>
+        <div class="arrow-bounce arrow-delay2">↑</div>
+    </div>
+    <div style="background: #5bc0be; color: #0b132b; padding: 25px; border-radius: 15px; text-align: center; font-weight: bold; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">Please enter a location first</div>
+</div>
+
 <div id="home-screen" class="container">
     <div class="header-area">
         <div class="title-row">
-            <h1>🌌 Aurora Forecast Pro <span class="version">v t1.1.12</span></h1>
+            <h1>🌌 Aurora Forecast Pro <span class="version">v t1.1.13</span></h1>
         </div>
         <div class="produce-by">Produce by Shin</div>
     </div>
@@ -199,8 +217,6 @@ function closeNotifModal() {
 function saveNotifSettings() {
     isNotifSettingsSaved = true;
     localStorage.setItem('notifEnabled', 'true');
-    
-    // 選択された場所の名前を取得
     const radioAnother = document.querySelector('input[name="notif-loc-type"][value="another"]');
     let locationName = "Current Location";
     if (radioAnother.checked) {
@@ -208,10 +224,7 @@ function saveNotifSettings() {
     } else if (document.getElementById("loc").textContent !== "Not Set") {
         locationName = document.getElementById("loc").textContent;
     }
-
-    // 完了メッセージを表示
     alert(`Notification set for:\n${locationName}`);
-    
     document.getElementById("notifModal").style.display = "none";
 }
 
@@ -266,13 +279,16 @@ function showAutocomplete(results, isN) {
     results.forEach(res => {
         const item = document.createElement("div");
         item.className = "autocomplete-item";
-        item.innerHTML = `${res.name}, ${res.country}`;
+        // 都市名, 国名を結合して表示
+        const fullName = `${res.name}, ${res.country}`;
+        item.innerHTML = fullName;
         item.onclick = (e) => {
             e.stopPropagation(); myLat = res.latitude; myLon = res.longitude;
-            const fullLabel = `${res.name}, ${res.country}`;
-            document.getElementById(isN ? "notifCityInput" : "cityInput").value = fullLabel;
-            document.getElementById("loc").textContent = fullLabel;
+            document.getElementById(isN ? "notifCityInput" : "cityInput").value = fullName;
+            document.getElementById("loc").textContent = fullName;
             list.innerHTML = ""; updateAll(); updateDoneButtonState();
+            // 入力後にウェルカム画面を消す
+            document.getElementById('welcome-overlay').style.display = 'none';
         };
         list.appendChild(item);
     });
@@ -289,8 +305,12 @@ async function getLocation() {
         myLat = p.coords.latitude; myLon = p.coords.longitude;
         const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${myLat}&lon=${myLon}&format=json`);
         const data = await res.json();
-        document.getElementById("loc").textContent = data.address.city || data.address.town || "Current Location";
+        const locName = data.address.city || data.address.town || "Current Location";
+        const countryName = data.address.country || "";
+        const fullName = countryName ? `${locName}, ${countryName}` : locName;
+        document.getElementById("loc").textContent = fullName;
         updateAll(); updateDoneButtonState();
+        document.getElementById('welcome-overlay').style.display = 'none';
     });
 }
 
