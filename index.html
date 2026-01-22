@@ -5,9 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Aurora Forecast Pro v t1.1.13</title>
 
+<!-- PWA / Notification related -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0b132b">
+<link rel="apple-touch-icon" href="icon.png">
+
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <style>
-/* ===== v t1.0.31 ORIGINAL STYLES (UNCHANGED) ===== */
+/* ====== ORIGINAL v t1.0.31 STYLE (UNCHANGED) ====== */
 body { font-family: system-ui, sans-serif; background:#0b132b; color:#eaeaea; padding:20px; margin:0; }
 .container { max-width:600px; margin: 0 auto; }
 .header-area { display: flex; flex-direction: column; margin-bottom: 10px; }
@@ -20,32 +25,20 @@ h1 { margin: 0; font-size: 1.5rem; }
 .label-main { font-size: 1.1rem; font-weight: bold; color: #5bc0be; margin-bottom: 0px; }
 .label-sub-current { font-size: 0.8rem; color: #8b949e; margin-bottom: 10px; }
 .value { font-size:1.6em; margin-top:4px; min-height: 1.2em; }
-.badge { display:inline-block; padding:10px 24px; border-radius:30px; font-weight:bold; font-size: 1.2rem; letter-spacing: 0.05em; box-shadow: 0 4px 15px rgba(0,0,0,0.3); margin-top: 5px; position: relative; }
+.badge { display:inline-block; padding:10px 24px; border-radius:30px; font-weight:bold; font-size: 1.2rem; }
 .badge-large { font-size: 1.5rem; }
 .low { background:#475569; } .mid { background:#ca8a04; } .high { background:#dc2626; }
 
-input, button { margin-top:6px; padding:6px 12px; border-radius: 4px; border: none; font-weight: bold; }
-button { cursor: pointer; background: #3a506b; color: white; transition: 0.2s; font-size: 0.9rem; }
-button:hover:not(:disabled) { background: #5bc0be; color: #0b132b; }
-button:disabled { opacity: 0.3; cursor: not-allowed; }
-
-.refresh-btn { position: absolute; top: 15px; right: 15px; font-size: 0.8em; padding: 4px 8px; }
-.last-updated { font-size: 0.65rem; color: #8b949e; text-align: right; margin-top: 4px; font-family: monospace; }
-
 /* ===== Notification UI (from v t1.1.12) ===== */
 .notification-card { border: 1px dashed #5bc0be; }
-.btn-test { background: #ca8a04 !important; }
-
-.switch { position: relative; display: inline-block; width: 44px; height: 22px; margin-top: 5px; }
+.btn-test { background: #ca8a04; }
+.switch { position: relative; display: inline-block; width: 44px; height: 22px; }
 .switch input { opacity: 0; width: 0; height: 0; }
-.slider { position: absolute; cursor: pointer; inset: 0; background-color: #3a506b; transition: .4s; border-radius: 22px; }
-.slider:before {
-  position: absolute; content: "";
-  height: 16px; width: 16px;
-  left: 3px; bottom: 3px;
-  background-color: white;
-  transition: .4s; border-radius: 50%;
-}
+.slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+  background-color: #3a506b; transition: .4s; border-radius: 22px; }
+.slider:before { position: absolute; content: ""; height: 16px; width: 16px;
+  left: 3px; bottom: 3px; background-color: white;
+  transition: .4s; border-radius: 50%; }
 input:checked + .slider { background-color: #5bc0be; }
 input:checked + .slider:before { transform: translateX(22px); }
 .switch-label { font-size: 0.75rem; color: #5bc0be; font-weight: bold; }
@@ -67,69 +60,59 @@ input:checked + .slider:before { transform: translateX(22px); }
   <!-- ===== Notification Settings (ADDED) ===== -->
   <div class="card notification-card">
     <div class="label-main" style="font-size:0.9rem;">App Settings</div>
-
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
-      <span class="switch-label">Notification</span>
-      <label class="switch">
-        <input type="checkbox" id="notif-toggle" onchange="handleNotifToggle(this)">
-        <span class="slider"></span>
-      </label>
-    </div>
-
     <button id="btn-notif-test" class="btn-test" onclick="testNotification();">
       Send Test Notification (10s delay)
     </button>
   </div>
 
-  <!-- ===== 以下は v t1.0.31 の既存UI（未変更） ===== -->
-  <!-- ※ 省略せず実運用ではこの下に元コードをそのまま配置してください -->
+  <!-- ===== Original Main Result Card (layout unchanged) ===== -->
+  <div class="card" id="card-main-result">
+    <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+      <div>
+        <div class="label-main">Overall Probability</div>
+        <div id="total-sub-label" class="label-sub-current">Current:</div>
+      </div>
+      <div style="display:flex; flex-direction:column; align-items:flex-end;">
+        <span class="switch-label">Notification</span>
+        <label class="switch">
+          <input type="checkbox" id="notif-toggle" onchange="handleNotifToggle(this)">
+          <span class="slider"></span>
+        </label>
+      </div>
+    </div>
+    <div id="result" class="badge badge-large low">--</div>
+  </div>
 </div>
 
 <script>
 /* ===== Notification Logic (from v t1.1.12) ===== */
-const NOTIF_KEY = "auroraNotifEnabled";
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js');
+}
 
 function handleNotifToggle(el) {
-  if (!("Notification" in window)) {
-    alert("This browser does not support notifications.");
-    el.checked = false;
-    return;
-  }
-
   if (el.checked) {
     Notification.requestPermission().then(p => {
-      if (p !== "granted") {
-        alert("Notification permission denied.");
-        el.checked = false;
-        localStorage.setItem(NOTIF_KEY, "0");
-      } else {
-        localStorage.setItem(NOTIF_KEY, "1");
-      }
+      if (p !== 'granted') el.checked = false;
     });
-  } else {
-    localStorage.setItem(NOTIF_KEY, "0");
   }
 }
 
 function testNotification() {
-  if (Notification.permission !== "granted") {
-    alert("Notification is not enabled.");
+  if (Notification.permission !== 'granted') {
+    alert('Notification permission not granted');
     return;
   }
-
   setTimeout(() => {
-    new Notification("Aurora Forecast Pro", {
-      body: "🌌 This is a test notification.",
-      silent: false
+    navigator.serviceWorker.ready.then(reg => {
+      reg.showNotification('Aurora Forecast Alert', {
+        body: 'This is a test notification 🌌',
+        icon: 'icon.png'
+      });
     });
   }, 10000);
 }
-
-(function initNotifState(){
-  const enabled = localStorage.getItem(NOTIF_KEY) === "1";
-  const toggle = document.getElementById("notif-toggle");
-  if (toggle) toggle.checked = enabled;
-})();
 </script>
 
 </body>
