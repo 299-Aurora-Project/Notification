@@ -1,9 +1,10 @@
 self.addEventListener('install', (e) => {
+  self.skipWaiting(); // 新しいSWをすぐに有効化
   console.log('Service Worker installed');
 });
 
 self.addEventListener('fetch', (e) => {
-  // PWAとして動作するための最小構成
+  // キャッシュ戦略が必要な場合はここに記述
 });
 
 self.addEventListener('notificationclick', (event) => {
