@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Aurora Forecast Pro v1.1.4</title>
+<title>Aurora Forecast Pro v1.1.5</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#0b132b">
 <link rel="apple-touch-icon" href="icon.png">
@@ -70,14 +70,13 @@ pre { background:#0b132b; padding:12px; border-radius:8px; font-family: monospac
 .btn-test { background: #ca8a04 !important; }
 
 /* スライドスイッチ用スタイル */
-.switch-container { position: absolute; top: 20px; right: 20px; display: flex; align-items: center; gap: 8px; }
-.switch-label { font-size: 0.7rem; color: #8b949e; }
 .switch { position: relative; display: inline-block; width: 40px; height: 20px; }
 .switch input { opacity: 0; width: 0; height: 0; }
 .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #3a506b; transition: .4s; border-radius: 20px; }
 .slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
 input:checked + .slider { background-color: #5bc0be; }
 input:checked + .slider:before { transform: translateX(20px); }
+.switch-label { font-size: 0.7rem; color: #8b949e; margin-bottom: 4px; }
 
 /* モーダル内検索窓の状態用 */
 .search-disabled { opacity: 0.4; pointer-events: none; }
@@ -95,7 +94,7 @@ input:checked + .slider:before { transform: translateX(20px); }
 <div id="home-screen" class="container">
     <div class="header-area">
         <div class="title-row">
-            <h1>🌌 Aurora Forecast Pro<span class="beta-suffix">(beta)</span> <span class="version">v1.1.4</span></h1>
+            <h1>🌌 Aurora Forecast Pro<span class="beta-suffix">(beta)</span> <span class="version">v1.1.5</span></h1>
         </div>
         <div class="produce-by">Produce by Shin</div>
     </div>
@@ -120,15 +119,20 @@ input:checked + .slider:before { transform: translateX(20px); }
     </div>
 
     <div class="card" id="card-main-result">
-        <div class="switch-container">
-            <span class="switch-label">Notification</span>
-            <label class="switch">
-                <input type="checkbox" id="notif-toggle" onchange="handleNotifToggle(this)">
-                <span class="slider"></span>
-            </label>
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <div>
+                <div id="total-label" class="label-main">Overall Probability</div>
+                <div id="total-sub-label" class="label-sub-current">Current:</div>
+            </div>
+            <div style="display: flex; flex-direction: column; align-items: flex-end;">
+                <span class="switch-label">Notification</span>
+                <label class="switch">
+                    <input type="checkbox" id="notif-toggle" onchange="handleNotifToggle(this)">
+                    <span class="slider"></span>
+                </label>
+            </div>
         </div>
-        <div id="total-label" class="label-main">Overall Probability</div>
-        <div id="total-sub-label" class="label-sub-current">Current:</div>
+
         <div id="result" class="badge badge-large low">--</div>
         <div style="margin-top: 15px;">
             <button onclick="openModal(); event.stopPropagation();" style="font-size: 0.85em; background: #1c2541; border: 1px solid #3a506b; padding: 8px 16px;">View Details</button>
@@ -216,10 +220,10 @@ input:checked + .slider:before { transform: translateX(20px); }
         <div class="modal-title" style="color:#5bc0be; font-weight:bold; margin-bottom:15px;">Notification Settings</div>
         
         <div style="margin-bottom: 15px;">
-            <label style="display:block; margin-bottom:8px;">
+            <label style="display:block; margin-bottom:12px; cursor:pointer;">
                 <input type="radio" name="notif-loc-type" value="current" checked onchange="toggleNotifSearch(false)"> Current set location
             </label>
-            <label style="display:block; margin-bottom:8px;">
+            <label style="display:block; margin-bottom:8px; cursor:pointer;">
                 <input type="radio" name="notif-loc-type" value="another" onchange="toggleNotifSearch(true)"> Select another location
             </label>
         </div>
@@ -299,7 +303,6 @@ function toggleNotifSearch(enabled) {
 }
 
 /* 通知ロジック */
-/* v1.1.4 */
 async function testNotification() {
     const permission = await Notification.requestPermission();
     if (permission === "granted") {
@@ -326,15 +329,14 @@ function checkAndNotify(score, statusText) {
     const lastNotifyDate = localStorage.getItem('lastNotifyDate');
     const today = new Date().toDateString();
     const now = new Date();
-    const currentTimeStr = now.getHours() + ":" + now.getMinutes();
 
-    // 1. 通常のスコア上昇通知 (Possible/High かつ 1日1回)
+    // 1. スコア上昇通知 (Possible/High かつ 1日1回)
     if (score >= 35 && lastNotifyDate !== today) {
         sendPush("Aurora Alert!", `Aurora viewing chances are high in your area tonight! (${statusText})`);
         localStorage.setItem('lastNotifyDate', today);
     }
 
-    // 2. 21:00 定時通知 (Possible/High)
+    // 2. 21:00 定時通知
     if (now.getHours() === 21 && lastScheduledCheckDate !== today) {
         if (score >= 35) {
             sendPush("Aurora Alert!", "High chance of seeing aurora in you area right now. Look up!");
@@ -351,7 +353,7 @@ function sendPush(title, body) {
     }
 }
 
-/* 既存関数 (変更なし) */
+/* 既存関数 */
 function formatProbability(score) {
     const rounded = Math.round(score);
     if (rounded <= 0) return "< 1 %";
@@ -517,7 +519,6 @@ function calculateTotal() {
     
     resultEl.innerHTML = statusText;
 
-    // 通知判定の呼び出し
     checkAndNotify(currentTotalScore, statusText.replace(cloudTag, ''));
 }
 
