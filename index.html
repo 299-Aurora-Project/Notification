@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Aurora Forecast Pro v t1.1.3</title>
+<title>Aurora Forecast Pro v1.1.4</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#0b132b">
 <link rel="apple-touch-icon" href="icon.png">
@@ -68,6 +68,19 @@ pre { background:#0b132b; padding:12px; border-radius:8px; font-family: monospac
 /* 通知設定用スタイル */
 .notification-card { border: 1px dashed #5bc0be !important; margin-top: 10px; }
 .btn-test { background: #ca8a04 !important; }
+
+/* スライドスイッチ用スタイル */
+.switch-container { position: absolute; top: 20px; right: 20px; display: flex; align-items: center; gap: 8px; }
+.switch-label { font-size: 0.7rem; color: #8b949e; }
+.switch { position: relative; display: inline-block; width: 40px; height: 20px; }
+.switch input { opacity: 0; width: 0; height: 0; }
+.slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #3a506b; transition: .4s; border-radius: 20px; }
+.slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+input:checked + .slider { background-color: #5bc0be; }
+input:checked + .slider:before { transform: translateX(20px); }
+
+/* モーダル内検索窓の状態用 */
+.search-disabled { opacity: 0.4; pointer-events: none; }
 </style>
 </head>
 <body onkeydown="closeWelcome()" onclick="closeWelcome(); closeAllLists();">
@@ -82,7 +95,7 @@ pre { background:#0b132b; padding:12px; border-radius:8px; font-family: monospac
 <div id="home-screen" class="container">
     <div class="header-area">
         <div class="title-row">
-            <h1>🌌 Aurora Forecast Pro<span class="beta-suffix">(beta)</span> <span class="version">v t1.1.3</span></h1>
+            <h1>🌌 Aurora Forecast Pro<span class="beta-suffix">(beta)</span> <span class="version">v1.1.4</span></h1>
         </div>
         <div class="produce-by">Produce by Shin</div>
     </div>
@@ -107,6 +120,13 @@ pre { background:#0b132b; padding:12px; border-radius:8px; font-family: monospac
     </div>
 
     <div class="card" id="card-main-result">
+        <div class="switch-container">
+            <span class="switch-label">Notification</span>
+            <label class="switch">
+                <input type="checkbox" id="notif-toggle" onchange="handleNotifToggle(this)">
+                <span class="slider"></span>
+            </label>
+        </div>
         <div id="total-label" class="label-main">Overall Probability</div>
         <div id="total-sub-label" class="label-sub-current">Current:</div>
         <div id="result" class="badge badge-large low">--</div>
@@ -190,6 +210,34 @@ pre { background:#0b132b; padding:12px; border-radius:8px; font-family: monospac
     </div>
 </div>
 
+<div id="notifModal" class="modal-overlay" onclick="closeNotifModal()">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <span class="close-modal" onclick="closeNotifModal()">&times;</span>
+        <div class="modal-title" style="color:#5bc0be; font-weight:bold; margin-bottom:15px;">Notification Settings</div>
+        
+        <div style="margin-bottom: 15px;">
+            <label style="display:block; margin-bottom:8px;">
+                <input type="radio" name="notif-loc-type" value="current" checked onchange="toggleNotifSearch(false)"> Current set location
+            </label>
+            <label style="display:block; margin-bottom:8px;">
+                <input type="radio" name="notif-loc-type" value="another" onchange="toggleNotifSearch(true)"> Select another location
+            </label>
+        </div>
+
+        <div id="notif-search-ui" class="search-disabled">
+            <div class="search-container" style="width: 100%;">
+                <input id="notifCityInput" placeholder="Search City..." oninput="handleCityInput(this)" style="width: calc(100% - 90px);">
+                <button id="btn-notif-search" onclick="searchCity(); event.stopPropagation();" disabled>Set</button>
+                <div id="notif-autocomplete-list" class="autocomplete-items" style="right: 90px;"></div>
+            </div>
+        </div>
+
+        <div style="margin-top:20px; text-align:right;">
+            <button onclick="closeNotifModal()" style="background:#5bc0be; color:#0b132b; padding:8px 20px;">Done</button>
+        </div>
+    </div>
+</div>
+
 <div id="map-screen">
     <button class="btn" id="back-btn" onclick="hideMapScreen();">← Back</button>
     <div id="map"></div>
@@ -208,68 +256,98 @@ let map = null; let auroraLayer = null; let userMarker = null; let cloudDataHour
 let currentTotalScore = 0;
 let lastScrollPos = 0;
 let searchTimer = null;
+let lastScheduledCheckDate = null;
 
 /* PWA Service Worker Registration */
 if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('sw.js').then(() => console.log("SW Registered"));
 }
 
+/* 通知スイッチとモーダルの制御 */
+async function handleNotifToggle(el) {
+    if (el.checked) {
+        const permission = await Notification.requestPermission();
+        if (permission === "granted") {
+            document.getElementById("notifModal").style.display = "flex";
+            localStorage.setItem('notifEnabled', 'true');
+        } else {
+            el.checked = false;
+            alert("Please enable notifications in your browser settings.");
+        }
+    } else {
+        localStorage.setItem('notifEnabled', 'false');
+    }
+}
+
+function closeNotifModal() {
+    const radioCurrent = document.querySelector('input[name="notif-loc-type"][value="current"]');
+    if (radioCurrent.checked && (myLat === null || document.getElementById("loc").textContent === "Not Set")) {
+        alert("Please set a location");
+        document.getElementById("notif-toggle").checked = false;
+        localStorage.setItem('notifEnabled', 'false');
+    }
+    document.getElementById("notifModal").style.display = "none";
+}
+
+function toggleNotifSearch(enabled) {
+    const ui = document.getElementById("notif-search-ui");
+    if (enabled) {
+        ui.classList.remove("search-disabled");
+    } else {
+        ui.classList.add("search-disabled");
+    }
+}
+
 /* 通知ロジック */
-/* v t1.1.3 */
+/* v1.1.4 */
 async function testNotification() {
-    console.log("Notification button clicked");
-    
-    // モバイルのブラウザ内では window.Notification が undefined になることがあります
-    // その場合、ServiceWorkerRegistration からアプローチします
-    const hasServiceWorker = 'serviceWorker' in navigator;
-    const hasNotification = 'Notification' in window;
-
-    if (!hasNotification && !hasServiceWorker) {
-        alert("This browser/OS does not support notifications.");
-        return;
-    }
-
-    // iOS/Android 向けの権限リクエスト
-    let permission = Notification.permission;
-    if (permission === "default") {
-        permission = await Notification.requestPermission();
-    }
-
-    console.log("Permission status:", permission);
-
+    const permission = await Notification.requestPermission();
     if (permission === "granted") {
         try {
             const registration = await navigator.serviceWorker.ready;
-            // 24時間以内の重複通知を防ぐため、テストボタンでも日付チェックを無視して強制発信
             await registration.showNotification("Aurora Forecast Pro", {
                 body: "Mobile notification is working!",
                 icon: "icon.png",
                 badge: "icon.png",
-                vibrate: [200, 100, 200] // モバイル用の振動パターン
+                vibrate: [200, 100, 200]
             });
         } catch (error) {
-            console.error("Mobile SW Error:", error);
             alert("Notification failed: Ensure you have added this app to your Home Screen.");
         }
     } else {
-        alert(`Permission ${permission}: Please enable notifications in your OS settings.`);
+        alert("Permission denied.");
     }
 }
+
 function checkAndNotify(score, statusText) {
+    const notifEnabled = localStorage.getItem('notifEnabled') === 'true';
+    if (!notifEnabled) return;
+
     const lastNotifyDate = localStorage.getItem('lastNotifyDate');
     const today = new Date().toDateString();
+    const now = new Date();
+    const currentTimeStr = now.getHours() + ":" + now.getMinutes();
 
-    // Possible (35%+) または High (70%+) で、かつ今日まだ通知していない場合
+    // 1. 通常のスコア上昇通知 (Possible/High かつ 1日1回)
     if (score >= 35 && lastNotifyDate !== today) {
-        if (Notification.permission === "granted") {
-            navigator.serviceWorker.ready.then(registration => {
-                registration.showNotification("Aurora Alert!", {
-                    body: `Aurora possibility is ${statusText} (${Math.round(score)}%) at your location!`,
-                    icon: "icon.png"
-                });
-                localStorage.setItem('lastNotifyDate', today);
-            });
+        sendPush("Aurora Alert!", `Aurora viewing chances are high in your area tonight! (${statusText})`);
+        localStorage.setItem('lastNotifyDate', today);
+    }
+
+    // 2. 21:00 定時通知 (Possible/High)
+    if (now.getHours() === 21 && lastScheduledCheckDate !== today) {
+        if (score >= 35) {
+            sendPush("Aurora Alert!", "High chance of seeing aurora in you area right now. Look up!");
         }
+        lastScheduledCheckDate = today;
+    }
+}
+
+function sendPush(title, body) {
+    if (Notification.permission === "granted") {
+        navigator.serviceWorker.ready.then(registration => {
+            registration.showNotification(title, { body, icon: "icon.png" });
+        });
     }
 }
 
@@ -293,31 +371,33 @@ function toggleData() {
 }
 
 function handleCityInput(el) {
+    const isNotif = el.id === "notifCityInput";
     const val = el.value.trim();
-    document.getElementById("btn-search").disabled = val.length === 0;
-    document.getElementById("search-error").style.opacity = "0";
+    document.getElementById(isNotif ? "btn-notif-search" : "btn-search").disabled = val.length === 0;
+    if (!isNotif) document.getElementById("search-error").style.opacity = "0";
+    
     clearTimeout(searchTimer);
     if (val.length < 2) { closeAllLists(); return; }
     searchTimer = setTimeout(async () => {
         try {
             const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(val)}&count=5&language=en`);
             const data = await res.json();
-            showAutocomplete(data.results);
+            showAutocomplete(data.results, isNotif);
         } catch (e) {}
     }, 300);
 }
 
-function showAutocomplete(results) {
+function showAutocomplete(results, isNotif = false) {
     closeAllLists();
     if (!results) return;
-    const list = document.getElementById("autocomplete-list");
+    const list = document.getElementById(isNotif ? "notif-autocomplete-list" : "autocomplete-list");
     results.forEach(res => {
         const item = document.createElement("div");
         item.className = "autocomplete-item";
         item.innerHTML = `<strong>${res.name}</strong>, ${res.admin1 || ''} ${res.country}`;
         item.onclick = (e) => {
             e.stopPropagation();
-            document.getElementById("cityInput").value = res.name;
+            document.getElementById(isNotif ? "notifCityInput" : "cityInput").value = res.name;
             myLat = res.latitude; myLon = res.longitude;
             document.getElementById("loc").textContent = `${res.name}, ${res.country}`;
             closeAllLists();
@@ -326,7 +406,10 @@ function showAutocomplete(results) {
         list.appendChild(item);
     });
 }
-function closeAllLists() { const list = document.getElementById("autocomplete-list"); if(list) list.innerHTML = ""; }
+function closeAllLists() { 
+    document.getElementById("autocomplete-list").innerHTML = ""; 
+    document.getElementById("notif-autocomplete-list").innerHTML = ""; 
+}
 
 function openModal() {
     if (myLat === null) { alert("Please set a location first"); return; }
@@ -358,11 +441,13 @@ async function getLocation() {
 }
 
 async function searchCity() {
-    const city = document.getElementById("cityInput").value;
+    const isNotif = document.getElementById("notifModal").style.display === "flex";
+    const city = document.getElementById(isNotif ? "notifCityInput" : "cityInput").value;
     const errorEl = document.getElementById("search-error"); 
     if(errorEl) errorEl.style.opacity = "0";
     setItemLoading('loc', true);
-    document.getElementById('btn-search').classList.add('loading-btn');
+    const btn = document.getElementById(isNotif ? 'btn-notif-search' : 'btn-search');
+    btn.classList.add('loading-btn');
     try {
         const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=en`);
         const data = await res.json();
@@ -375,7 +460,7 @@ async function searchCity() {
             if(errorEl) errorEl.style.opacity = "1";
         }
     } catch (e) { alert("Search Error"); }
-    document.getElementById('btn-search').classList.remove('loading-btn');
+    btn.classList.remove('loading-btn');
 }
 
 async function updateAll() {
@@ -436,7 +521,7 @@ function calculateTotal() {
     checkAndNotify(currentTotalScore, statusText.replace(cloudTag, ''));
 }
 
-/* 既存のAPI連携関数 (変更なし) */
+/* 既存のAPI連携関数 */
 async function reverseGeocode(lat, lon) { try { const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&accept-language=en`); const data = await res.json(); document.getElementById("loc").textContent = (data.address.city || data.address.town || "Unknown") + ", " + data.address.country; } catch (e) { document.getElementById("loc").textContent = lat.toFixed(2) + ", " + lon.toFixed(2); } }
 async function getKp() { try { const res = await fetch(CORS + encodeURIComponent(KP_URL)); const data = await res.json(); const val = parseFloat(data[data.length - 1][1]); const el = document.getElementById("kp"); el.textContent = val.toFixed(1); el.dataset.value = val; if(val >= 5) el.className = "badge high"; else if(val >= 3) el.className = "badge mid"; else el.className = "badge low"; updateTimestamp('time-kp'); return val; } catch(e) { return 0; } }
 async function fetchKp3DayForecast() { try { const res = await fetch(CORS + encodeURIComponent(FORECAST_URL)); const text = await res.text(); const match = text.match(/NOAA Kp index breakdown[\s\S]*?(?=\n[A-Z]|$)/i); document.getElementById("kpForecast").innerText = match ? match[0].trim() : "Updating..."; document.getElementById("kp-short").innerHTML = `<div>Ref 3-day forecast (NOAA)</div>`; updateTimestamp('time-kp3'); } catch(e) { } }
