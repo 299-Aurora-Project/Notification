@@ -75,7 +75,13 @@ pre { background:#0b132b; padding:12px; border-radius:8px; font-family: monospac
 .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
 input:checked + .slider { background-color: #5bc0be; }
 input:checked + .slider:before { transform: translateX(22px); }
-.switch-label { font-size: 0.75rem; color: #5bc0be; white-space: nowrap; font-weight: bold; padding-top: 5px; } /* 文字色を少し明るく、位置を微調整 */
+.switch-label { 
+    font-size: 0.75rem; 
+    color: #5bc0be; 
+    white-space: nowrap; 
+    font-weight: bold; 
+    padding-top: 35px; /* ここを 5px から 35px に変更 */
+}
 
 /* モーダル内検索窓の状態用 */
 .search-disabled { opacity: 0.4; pointer-events: none; }
@@ -524,3 +530,4 @@ function drawAurora(data) { auroraLayer.clearLayers(); data.coordinates.forEach(
 </script>
 </body>
 </html>
+
