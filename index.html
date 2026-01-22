@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Aurora Forecast Pro v t1.1.8</title>
+<title>Aurora Forecast Pro v t1.1.9</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#0b132b">
 <link rel="apple-touch-icon" href="icon.png">
@@ -69,7 +69,13 @@ pre { background:#0b132b; padding:12px; border-radius:8px; font-family: monospac
 .btn-test { background: #ca8a04 !important; }
 
 /* スライドスイッチ用スタイル */
-.switch { position: relative; display: inline-block; width: 44px; height: 22px; margin-top: 30px; } /* スイッチをさらに下げました */
+.switch { 
+    position: relative; 
+    display: inline-block; 
+    width: 44px; 
+    height: 22px; 
+    margin-top: 5px; /* ここを 30px から 5px (または 0px) に変更 */
+}
 .switch input { opacity: 0; width: 0; height: 0; }
 .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #3a506b; transition: .4s; border-radius: 22px; }
 .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
@@ -99,7 +105,7 @@ input:checked + .slider:before { transform: translateX(22px); }
 <div id="home-screen" class="container">
     <div class="header-area">
         <div class="title-row">
-            <h1>🌌 Aurora Forecast Pro<span class="beta-suffix">(beta)</span> <span class="version">v t1.1.8</span></h1>
+            <h1>🌌 Aurora Forecast Pro<span class="beta-suffix">(beta)</span> <span class="version">v t1.1.9</span></h1>
         </div>
         <div class="produce-by">Produce by Shin</div>
     </div>
@@ -530,5 +536,6 @@ function drawAurora(data) { auroraLayer.clearLayers(); data.coordinates.forEach(
 </script>
 </body>
 </html>
+
 
 
