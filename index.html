@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Aurora Forecast Pro v1.1.6</title>
+<title>Aurora Forecast Pro v1.1.7</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#0b132b">
 <link rel="apple-touch-icon" href="icon.png">
@@ -37,10 +37,10 @@ button:disabled { opacity: 0.3; cursor: not-allowed; }
 .autocomplete-items { position: absolute; border: 1px solid #3a506b; border-bottom: none; border-top: none; z-index: 99; top: 100%; left: 0; right: 100px; background-color: #1c2541; border-radius: 0 0 4px 4px; max-height: 200px; overflow-y: auto; }
 .autocomplete-item { padding: 10px; cursor: pointer; border-bottom: 1px solid #30363d; font-size: 0.85rem; }
 .autocomplete-item:hover { background-color: #3a506b; color: #5bc0be; }
-.refresh-btn { position: absolute; top: 15px; right: 15px; font-size: 0.8em; padding: 4px 8px; }
+.refresh-btn { position: absolute; top: 15px; right: 15px; font-size: 0.8em; padding: 4px 8px; z-index: 10; }
 .sub-refresh-btn { position: absolute; top: 15px; right: 0; font-size: 0.8em; padding: 4px 8px; }
 .last-updated { font-size: 0.65rem; color: #8b949e; text-align: right; margin-top: 4px; font-family: monospace; }
-.refresh-btn + .last-updated { position: absolute; top: 40px; right: 15px; width: auto; }
+.refresh-btn + .last-updated { position: absolute; top: 40px; right: 15px; width: auto; z-index: 10; }
 .sub-refresh-btn + .last-updated { position: absolute; top: 40px; right: 0; width: auto; }
 .error-msg { color: #ff6b6b; font-size: 0.75rem; margin-top: 5px; min-height: 1em; opacity: 0; transition: 0.3s; }
 .loading-text { opacity: 0.6; font-size: 1rem; color: #8b949e; font-style: normal; }
@@ -69,13 +69,13 @@ pre { background:#0b132b; padding:12px; border-radius:8px; font-family: monospac
 .btn-test { background: #ca8a04 !important; }
 
 /* スライドスイッチ用スタイル */
-.switch { position: relative; display: inline-block; width: 44px; height: 22px; margin-top: 15px; } /* margin-topで位置を下げました */
+.switch { position: relative; display: inline-block; width: 44px; height: 22px; margin-top: 30px; } /* スイッチをさらに下げました */
 .switch input { opacity: 0; width: 0; height: 0; }
 .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #3a506b; transition: .4s; border-radius: 22px; }
 .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
 input:checked + .slider { background-color: #5bc0be; }
 input:checked + .slider:before { transform: translateX(22px); }
-.switch-label { font-size: 0.75rem; color: #8b949e; white-space: nowrap; }
+.switch-label { font-size: 0.75rem; color: #5bc0be; white-space: nowrap; font-weight: bold; padding-top: 5px; } /* 文字色を少し明るく、位置を微調整 */
 
 /* モーダル内検索窓の状態用 */
 .search-disabled { opacity: 0.4; pointer-events: none; }
@@ -93,7 +93,7 @@ input:checked + .slider:before { transform: translateX(22px); }
 <div id="home-screen" class="container">
     <div class="header-area">
         <div class="title-row">
-            <h1>🌌 Aurora Forecast Pro<span class="beta-suffix">(beta)</span> <span class="version">v1.1.6</span></h1>
+            <h1>🌌 Aurora Forecast Pro<span class="beta-suffix">(beta)</span> <span class="version">v1.1.7</span></h1>
         </div>
         <div class="produce-by">Produce by Shin</div>
     </div>
@@ -118,12 +118,13 @@ input:checked + .slider:before { transform: translateX(22px); }
     </div>
 
     <div class="card" id="card-main-result">
-        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; position: relative;">
             <div style="flex: 1;">
                 <div id="total-label" class="label-main">Overall Probability</div>
                 <div id="total-sub-label" class="label-sub-current">Current:</div>
             </div>
-            <div style="display: flex; flex-direction: column; align-items: flex-end; padding-left: 10px;">
+            
+            <div style="display: flex; flex-direction: column; align-items: flex-end; padding-left: 10px; z-index: 20;">
                 <span class="switch-label">Notification</span>
                 <label class="switch">
                     <input type="checkbox" id="notif-toggle" onchange="handleNotifToggle(this)">
@@ -136,6 +137,7 @@ input:checked + .slider:before { transform: translateX(22px); }
         <div style="margin-top: 15px;">
             <button onclick="openModal(); event.stopPropagation();" style="font-size: 0.85em; background: #1c2541; border: 1px solid #3a506b; padding: 8px 16px;">View Details</button>
         </div>
+        
         <button id="btn-update-all" class="refresh-btn" onclick="updateAll(); event.stopPropagation();">Update All</button>
         <div id="time-update-all" class="last-updated"></div>
     </div>
@@ -217,7 +219,6 @@ input:checked + .slider:before { transform: translateX(22px); }
     <div class="modal-content" onclick="event.stopPropagation()">
         <span class="close-modal" onclick="closeNotifModal()">&times;</span>
         <div class="modal-title" style="color:#5bc0be; font-weight:bold; margin-bottom:15px;">Notification Settings</div>
-        
         <div style="margin-bottom: 15px;">
             <label style="display:block; margin-bottom:12px; cursor:pointer;">
                 <input type="radio" name="notif-loc-type" value="current" checked onchange="toggleNotifSearch(false)"> Current set location
@@ -226,7 +227,6 @@ input:checked + .slider:before { transform: translateX(22px); }
                 <input type="radio" name="notif-loc-type" value="another" onchange="toggleNotifSearch(true)"> Select another location
             </label>
         </div>
-
         <div id="notif-search-ui" class="search-disabled">
             <div class="search-container" style="width: 100%;">
                 <input id="notifCityInput" placeholder="Search City..." oninput="handleCityInput(this)" style="width: calc(100% - 90px);">
@@ -234,7 +234,6 @@ input:checked + .slider:before { transform: translateX(22px); }
                 <div id="notif-autocomplete-list" class="autocomplete-items" style="right: 90px;"></div>
             </div>
         </div>
-
         <div style="margin-top:20px; text-align:right;">
             <button onclick="closeNotifModal()" style="background:#5bc0be; color:#0b132b; padding:8px 20px;">Done</button>
         </div>
@@ -291,11 +290,8 @@ function closeNotifModal() {
 
 function toggleNotifSearch(enabled) {
     const ui = document.getElementById("notif-search-ui");
-    if (enabled) {
-        ui.classList.remove("search-disabled");
-    } else {
-        ui.classList.add("search-disabled");
-    }
+    if (enabled) { ui.classList.remove("search-disabled"); } 
+    else { ui.classList.add("search-disabled"); }
 }
 
 async function testNotification() {
