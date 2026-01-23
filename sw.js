@@ -1,96 +1,256 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Integrated Tool</title>
-    <style>
-        /* v. t.1.0.31 のスタイルを維持 */
-        body {
-            font-family: sans-serif;
-            background-color: #f4f4f9;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-        }
-        .container {
-            background: #fff;
-            padding: 2rem;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            width: 100%;
-            max-width: 400px;
-            text-align: center;
-        }
-        button {
-            padding: 10px 20px;
-            font-size: 16px;
-            cursor: pointer;
-            border: none;
-            border-radius: 4px;
-            background-color: #007bff;
-            color: white;
-            transition: background 0.3s;
-        }
-        button:hover {
-            background-color: #0056b3;
-        }
-
-        /* 通知機能用の追加スタイル (v. t.1.1.12より継承) */
-        #notification-banner {
-            display: none;
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background-color: #28a745;
-            color: white;
-            padding: 15px 30px;
-            border-radius: 5px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-            z-index: 1000;
-            animation: fadeInOut 3s ease-in-out;
-        }
-        @keyframes fadeInOut {
-            0% { opacity: 0; top: 0; }
-            15% { opacity: 1; top: 20px; }
-            85% { opacity: 1; top: 20px; }
-            100% { opacity: 0; top: 0; }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aurora Forecast Pro v t1.1.12</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0b132b">
+<link rel="apple-touch-icon" href="icon.png">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+body { font-family: system-ui, sans-serif; background:#0b132b; color:#eaeaea; padding:20px; margin:0; }
+.container { max-width:600px; margin:0 auto; }
+.header-area { display:flex; flex-direction:column; margin-bottom:10px; }
+.produce-by { font-size:0.7rem; color:#8b949e; margin-top:-5px; margin-bottom:10px; align-self:flex-end; }
+.version { font-size:0.4em; color:#5bc0be; margin-left:8px; font-weight:normal; }
+.title-row { display:flex; justify-content:space-between; align-items:baseline; width:100%; }
+h1 { margin:0; font-size:1.5rem; }
+.card { background:#1c2541; padding:20px; border-radius:12px; margin-bottom:20px; position:relative; border:1px solid #30363d; }
+.label-main { font-size:1.1rem; font-weight:bold; color:#5bc0be; margin-bottom:0px; }
+.label-sub-current { font-size:0.8rem; color:#8b949e; margin-bottom:10px; }
+.value { font-size:1.6em; margin-top:4px; min-height:1.2em; }
+.badge { display:inline-block; padding:10px 24px; border-radius:30px; font-weight:bold; font-size:1.2rem; letter-spacing:0.05em; box-shadow:0 4px 15px rgba(0,0,0,0.3); margin-top:5px; position:relative; }
+.badge-large { font-size:1.5rem; }
+.low { background:#475569; } .mid { background:#ca8a04; } .high { background:#dc2626; }
+input, button { margin-top:6px; padding:6px 12px; border-radius:4px; border:none; font-weight:bold; }
+button { cursor:pointer; background:#3a506b; color:white; transition:0.2s; font-size:0.9rem; }
+button:hover:not(:disabled) { background:#5bc0be; color:#0b132b; }
+button:disabled { opacity:0.3; cursor:not-allowed; }
+#btn-gps { width:auto; min-width:220px; padding:10px 20px; margin-bottom:15px; }
+.search-container { position:relative; display:inline-block; width:100%; margin-top:5px; }
+#cityInput { width:calc(100% - 100px); box-sizing:border-box; }
+.autocomplete-items { position:absolute; border:1px solid #3a506b; z-index:99; top:100%; left:0; right:100px; background-color:#1c2541; border-radius:0 0 4px 4px; max-height:200px; overflow-y:auto; }
+.autocomplete-item { padding:10px; cursor:pointer; border-bottom:1px solid #30363d; font-size:0.85rem; }
+.autocomplete-item:hover { background-color:#3a506b; color:#5bc0be; }
+.refresh-btn { position:absolute; top:15px; right:15px; font-size:0.8em; padding:4px 8px; z-index:10; }
+.last-updated { font-size:0.65rem; color:#8b949e; text-align:right; margin-top:4px; font-family:monospace; }
+.notification-card { border:1px dashed #5bc0be !important; margin-top:10px; }
+.btn-test { background:#ca8a04 !important; }
+.switch { position:relative; display:inline-block; width:44px; height:22px; margin-top:5px; }
+.switch input { opacity:0; width:0; height:0; }
+.slider { position:absolute; cursor:pointer; top:0; left:0; right:0; bottom:0; background-color:#3a506b; transition:.4s; border-radius:22px; }
+.slider:before { position:absolute; content:""; height:16px; width:16px; left:3px; bottom:3px; background-color:white; transition:.4s; border-radius:50%; }
+input:checked + .slider { background-color:#5bc0be; }
+input:checked + .slider:before { transform:translateX(22px); }
+.switch-label { font-size:0.75rem; color:#5bc0be; white-space:nowrap; font-weight:bold; padding-top:55px; }
+.search-disabled { opacity:0.4; pointer-events:none; }
+.modal-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:20000; justify-content:center; align-items:center; }
+.modal-content { background:#1c2541; width:90%; max-width:450px; padding:25px; border-radius:12px; position:relative; border:1px solid #5bc0be; line-height:1.6; }
+.close-modal { position:absolute; top:10px; right:15px; font-size:24px; cursor:pointer; color:#8b949e; }
+#map-screen { display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:9999; background:#000; }
+#map { width:100%; height:100%; }
+#back-btn { position:absolute; top:90px; left:10px; z-index:10000; background:#21262d; border:1px solid #30363d; color:white; padding:8px 16px; }
+.toggle-btn { width:100%; margin-bottom:20px; background:#1c2541; border:1px solid #3a506b; color:#5bc0be; }
+#hidden-data { display:none; }
+pre { background:#0b132b; padding:12px; border-radius:8px; font-family:monospace; font-size:0.85em; overflow-x:auto; border:1px solid #3a506b; }
+</style>
 </head>
-<body>
+<body onclick="closeAllLists();">
 
-    <div id="notification-banner"></div>
-
-    <div class="container">
-        <h1>メインツール</h1>
-        <p>現在のバージョン: v. t.1.1.13</p>
-        <button id="action-btn">アクション実行</button>
+<div id="home-screen" class="container">
+    <div class="header-area">
+        <div class="title-row">
+            <h1>🌌 Aurora Forecast Pro <span class="version">v t1.1.12</span></h1>
+        </div>
+        <div class="produce-by">Produce by Shin</div>
     </div>
 
-    <script>
-        // 通知表示関数 (v. t.1.1.12の機能)
-        function showNotification(message) {
-            const banner = document.getElementById('notification-banner');
-            banner.textContent = message;
-            banner.style.display = 'block';
-            
-            setTimeout(() => {
-                banner.style.display = 'none';
-            }, 3000);
-        }
+    <div class="card notification-card">
+        <div class="label-main" style="font-size:0.9rem;">App Settings</div>
+        <button id="btn-notif-test" class="btn-test" onclick="testNotification();">Send Test Notification (10s delay)</button>
+    </div>
 
-        // v. t.1.0.31 の基本ロジックに通知を統合
-        document.getElementById('action-btn').addEventListener('click', function() {
-            // 元の処理をシミュレート
-            console.log("Action performed");
+    <div class="card" id="card-loc">
+        <div class="label-main">Location</div>
+        <div id="loc" class="value">Not Set</div>
+        <button id="btn-gps" onclick="getLocation();">Get Current Location via GPS</button><br>
+        Search City:
+        <div class="search-container">
+            <input id="cityInput" placeholder="e.g. Fairbanks, AK" oninput="handleCityInput(this)">
+            <button id="btn-search" onclick="searchCity();" disabled>Set</button>
+            <div id="autocomplete-list" class="autocomplete-items"></div>
+        </div>
+    </div>
 
-            // 通知機能の呼び出し
-            showNotification("処理が正常に完了しました！");
-        });
-    </script>
-</body>
-</html>
+    <div class="card" id="card-main-result">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+            <div style="flex:1;">
+                <div class="label-main">Overall Probability</div>
+                <div id="total-sub-label" class="label-sub-current">Current:</div>
+            </div>
+            <div style="display:flex; flex-direction:column; align-items:flex-end; z-index:20;">
+                <span class="switch-label">Notification</span>
+                <label class="switch">
+                    <input type="checkbox" id="notif-toggle" onchange="handleNotifToggle(this)">
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </div>
+        <div id="result" class="badge badge-large low">--</div>
+        <div style="margin-top:15px;">
+            <button onclick="openModal();" style="background:#1c2541; border:1px solid #3a506b;">View Details</button>
+        </div>
+        <button id="btn-update-all" class="refresh-btn" onclick="updateAll();">Update All</button>
+        <div id="time-update-all" class="last-updated"></div>
+    </div>
+
+    <button id="toggle-data-btn" class="toggle-btn" onclick="toggleData();">Show All Information</button>
+
+    <div id="hidden-data">
+        <div class="card">
+            <div class="label-main">Aurora Oval</div>
+            <div id="oval" class="badge low">--</div>
+            <div id="oval-prob" style="font-size:0.9rem; color:#8b949e; margin:10px 0;"></div>
+            <button onclick="showMapScreen();" style="background:#238636;">View Aurora Map</button>
+        </div>
+        <div class="card">
+            <div class="label-main">Kp Index</div>
+            <div id="kp" class="badge low">--</div>
+            <pre id="kpForecast" style="margin-top:10px; font-size:0.8rem;">--</pre>
+        </div>
+        <div class="card">
+            <div class="label-main">Cloud Cover</div>
+            <div id="cloud" class="badge low">--</div>
+            <div id="forecast" style="margin-top:10px;">--</div>
+        </div>
+    </div>
+</div>
+
+<div id="notifModal" class="modal-overlay" onclick="closeNotifModal()">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <span class="close-modal" onclick="closeNotifModal()">&times;</span>
+        <div style="color:#5bc0be; font-weight:bold; margin-bottom:15px;">Notification Settings</div>
+        <label style="display:block; margin-bottom:12px; cursor:pointer;">
+            <input type="radio" name="notif-loc-type" value="current" checked onchange="toggleNotifSearch(false)"> Current location
+        </label>
+        <label style="display:block; margin-bottom:8px; cursor:pointer;">
+            <input type="radio" name="notif-loc-type" value="another" onchange="toggleNotifSearch(true)"> Select another
+        </label>
+        <div id="notif-search-ui" class="search-disabled" style="margin-top:10px;">
+            <div class="search-container" style="width:100%;">
+                <input id="notifCityInput" placeholder="Search City..." oninput="handleCityInput(this)" style="width:calc(100% - 90px);">
+                <div id="notif-autocomplete-list" class="autocomplete-items" style="right:90px;"></div>
+            </div>
+        </div>
+        <div style="margin-top:20px; text-align:right;">
+            <button id="btn-notif-done" onclick="saveNotifSettings()" style="background:#5bc0be; color:#0b132b; padding:8px 20px;">Done</button>
+        </div>
+    </div>
+</div>
+
+<div id="detailModal" class="modal-overlay" onclick="this.style.display='none'">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <span class="close-modal" onclick="document.getElementById('detailModal').style.display='none'">&times;</span>
+        <div style="color:#5bc0be; font-weight:bold; margin-bottom:10px;">Probability Details</div>
+        <div style="font-size:2.5rem; text-align:center; margin:15px 0;" id="score-pct">--</div>
+    </div>
+</div>
+
+<div id="map-screen">
+    <button id="back-btn" onclick="hideMapScreen();">← Back</button>
+    <div id="map"></div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const CORS = "https://corsproxy.io/?";
+const KP_URL = "https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json";
+const OVAL_URL = "https://services.swpc.noaa.gov/json/ovation_aurora_latest.json";
+const FORECAST_URL = "https://services.swpc.noaa.gov/text/3-day-forecast.txt";
+
+let myLat=null, myLon=null, lastAuroraProb=0, currentTotalScore=0, map=null, isNotifSettingsSaved=false;
+
+async function handleNotifToggle(el){
+    if(el.checked){
+        const permission = await Notification.requestPermission();
+        if(permission==="granted"){isNotifSettingsSaved=false; document.getElementById("notifModal").style.display="flex"; updateDoneButtonState();}
+        else{el.checked=false; alert("Please enable notifications in settings.");}
+    } else localStorage.setItem('notifEnabled','false');
+}
+function closeNotifModal(){
+    if(!isNotifSettingsSaved){document.getElementById("notif-toggle").checked=false; localStorage.setItem('notifEnabled','false');}
+    document.getElementById("notifModal").style.display="none";
+}
+function saveNotifSettings(){
+    isNotifSettingsSaved=true;
+    localStorage.setItem('notifEnabled','true');
+    const radioAnother=document.querySelector('input[name="notif-loc-type"][value="another"]');
+    let locationName="Current Location";
+    if(radioAnother.checked){locationName=document.getElementById("notifCityInput").value;}
+    else if(document.getElementById("loc").textContent!=="Not Set"){locationName=document.getElementById("loc").textContent;}
+    alert(`Notification set for:\n${locationName}`);
+    document.getElementById("notifModal").style.display="none";
+}
+function updateDoneButtonState(){
+    const radioAnother=document.querySelector('input[name="notif-loc-type"][value="another"]');
+    const doneBtn=document.getElementById("btn-notif-done");
+    if(radioAnother.checked){
+        const cityVal=document.getElementById("notifCityInput").value.trim();
+        const isDisabled=cityVal==="" || myLat===null;
+        doneBtn.disabled=isDisabled; doneBtn.style.opacity=isDisabled?"0.3":"1";
+    } else { const isDisabled=myLat===null; doneBtn.disabled=isDisabled; doneBtn.style.opacity=isDisabled?"0.3":"1";}
+}
+function toggleNotifSearch(enabled){document.getElementById("notif-search-ui").className=enabled?"":"search-disabled"; updateDoneButtonState();}
+async function testNotification(){
+    const permission=await Notification.requestPermission();
+    if(permission==="granted"){
+        const btn=document.getElementById("btn-notif-test");
+        btn.textContent="Wait 10s..."; btn.disabled=true;
+        setTimeout(async ()=>{
+            const reg=await navigator.serviceWorker.ready;
+            await reg.showNotification("🌌 Test Alert",{body:"High priority test!",icon:"icon.png"});
+            btn.textContent="Send Test Notification (10s delay)"; btn.disabled=false;
+        },10000);
+    }
+}
+function handleCityInput(el){
+    const isN=el.id==="notifCityInput", val=el.value.trim();
+    if(!isN) document.getElementById("btn-search").disabled=val.length===0;
+    if(val.length<2) return;
+    clearTimeout(window.searchTimer);
+    window.searchTimer=setTimeout(async ()=>{
+        const res=await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(val)}&count=5`);
+        const data=await res.json(); showAutocomplete(data.results,isN);
+    },300);
+}
+function showAutocomplete(results,isN){
+    const list=document.getElementById(isN?"notif-autocomplete-list":"autocomplete-list");
+    list.innerHTML=""; if(!results) return;
+    results.forEach(res=>{
+        const item=document.createElement("div");
+        item.className="autocomplete-item";
+        item.innerHTML=`${res.name}, ${res.country}`;
+        item.onclick=e=>{
+            e.stopPropagation(); myLat=res.latitude; myLon=res.longitude;
+            const fullLabel=`${res.name}, ${res.country}`;
+            document.getElementById(isN?"notifCityInput":"cityInput").value=fullLabel;
+            document.getElementById("loc").textContent=fullLabel;
+            list.innerHTML=""; updateAll(); updateDoneButtonState();
+        };
+        list.appendChild(item);
+    });
+}
+function closeAllLists(){document.getElementById("autocomplete-list").innerHTML=""; const el=document.getElementById("notif-autocomplete-list"); if(el) el.innerHTML="";}
+async function getLocation(){
+    navigator.geolocation.getCurrentPosition(async p=>{
+        myLat=p.coords.latitude; myLon=p.coords.longitude;
+        const res=await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${myLat}&lon=${myLon}&format=json`);
+        const data=await res.json();
+        document.getElementById("loc").textContent=data.address.city||data.address.town||"Current Location";
+        updateAll(); updateDoneButtonState();
+    });
+}
+async function updateAll(){if(myLat===null) return; await Promise.all([getKp(),checkOval(),getCloud()]); calculateTotal(); document.getElementById('time-update-all').textContent="Last: "+new Date().toLocaleTimeString();}
+function calculateTotal(){
+    let kp
