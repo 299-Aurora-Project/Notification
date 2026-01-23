@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Aurora Forecast Pro v t1.1.3</title>
+<title>Aurora Forecast Pro v t1.1.3+</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#0b132b">
 <link rel="apple-touch-icon" href="icon.png">
@@ -68,6 +68,55 @@ pre { background:#0b132b; padding:12px; border-radius:8px; font-family: monospac
 /* 通知設定用スタイル */
 .notification-card { border: 1px dashed #5bc0be !important; margin-top: 10px; }
 .btn-test { background: #ca8a04 !important; }
+
+/* スライドボタン（トグルスイッチ）の新設スタイル */
+.switch-container {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    margin-top: 12px;
+    gap: 10px;
+}
+.switch-label {
+    font-size: 0.75rem;
+    color: #8b949e;
+}
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 40px;
+    height: 20px;
+}
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: #3a506b;
+    transition: .4s;
+    border-radius: 20px;
+}
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 14px;
+    width: 14px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+input:checked + .slider {
+    background-color: #5bc0be;
+}
+input:checked + .slider:before {
+    transform: translateX(20px);
+}
 </style>
 </head>
 <body onkeydown="closeWelcome()" onclick="closeWelcome(); closeAllLists();">
@@ -82,7 +131,7 @@ pre { background:#0b132b; padding:12px; border-radius:8px; font-family: monospac
 <div id="home-screen" class="container">
     <div class="header-area">
         <div class="title-row">
-            <h1>🌌 Aurora Forecast Pro<span class="beta-suffix">(beta)</span> <span class="version">v t1.1.3</span></h1>
+            <h1>🌌 Aurora Forecast Pro<span class="beta-suffix">(beta)</span> <span class="version">v t1.1.3+</span></h1>
         </div>
         <div class="produce-by">Produce by Shin</div>
     </div>
@@ -114,6 +163,15 @@ pre { background:#0b132b; padding:12px; border-radius:8px; font-family: monospac
             <button onclick="openModal(); event.stopPropagation();" style="font-size: 0.85em; background: #1c2541; border: 1px solid #3a506b; padding: 8px 16px;">View Details</button>
         </div>
         <button id="btn-update-all" class="refresh-btn" onclick="updateAll(); event.stopPropagation();">Update All</button>
+        
+        <div class="switch-container">
+            <span class="switch-label">Notification</span>
+            <label class="switch">
+                <input type="checkbox" id="notif-toggle" onclick="event.stopPropagation();">
+                <span class="slider"></span>
+            </label>
+        </div>
+
         <div id="time-update-all" class="last-updated"></div>
     </div>
 
@@ -160,6 +218,34 @@ pre { background:#0b132b; padding:12px; border-radius:8px; font-family: monospac
         </div>
     </div>
 </div>
+
+
+<div id="notifModal" class="modal-overlay" onclick="closeNotifModal()">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <span class="close-modal" onclick="closeNotifModal()">&times;</span>
+        <div class="label-main">Notification Settings</div>
+        <p style="font-size: 0.85rem; color: #8b949e;">Select the location to monitor for aurora alerts.</p>
+        
+        <div class="radio-group">
+            <label class="radio-item">
+                <input type="radio" name="notifLocType" value="current" checked onchange="toggleNotifSearch(false)"> 
+                Current set location
+            </label>
+            <label class="radio-item">
+                <input type="radio" name="notifLocType" value="other" onchange="toggleNotifSearch(true)"> 
+                Select another location
+            </label>
+        </div>
+
+        <div id="notif-search-box" class="search-container search-fade">
+            <input id="notifCityInput" placeholder="Search another city..." oninput="handleCityInput(this, 'notif-autocomplete-list')" onclick="event.stopPropagation()">
+            <div id="notif-autocomplete-list" class="autocomplete-items"></div>
+        </div>
+
+        <button onclick="saveNotifSettings()" style="width: 100%; margin-top: 20px; background: #5bc0be; color: #0b132b;">Confirm & Enable</button>
+    </div>
+</div>
+
 
 <div id="detailModal" class="modal-overlay" onclick="closeModal()">
     <div class="modal-content" onclick="event.stopPropagation()">
@@ -219,8 +305,6 @@ if ('serviceWorker' in navigator) {
 async function testNotification() {
     console.log("Notification button clicked");
     
-    // モバイルのブラウザ内では window.Notification が undefined になることがあります
-    // その場合、ServiceWorkerRegistration からアプローチします
     const hasServiceWorker = 'serviceWorker' in navigator;
     const hasNotification = 'Notification' in window;
 
@@ -229,7 +313,6 @@ async function testNotification() {
         return;
     }
 
-    // iOS/Android 向けの権限リクエスト
     let permission = Notification.permission;
     if (permission === "default") {
         permission = await Notification.requestPermission();
@@ -240,12 +323,11 @@ async function testNotification() {
     if (permission === "granted") {
         try {
             const registration = await navigator.serviceWorker.ready;
-            // 24時間以内の重複通知を防ぐため、テストボタンでも日付チェックを無視して強制発信
             await registration.showNotification("Aurora Forecast Pro", {
                 body: "Mobile notification is working!",
                 icon: "icon.png",
                 badge: "icon.png",
-                vibrate: [200, 100, 200] // モバイル用の振動パターン
+                vibrate: [200, 100, 200]
             });
         } catch (error) {
             console.error("Mobile SW Error:", error);
@@ -256,11 +338,106 @@ async function testNotification() {
     }
 }
 
+
+
+
+/* ************************* */
+
+// --- 通知用変数 ---
+let isNotifEnabled = false;
+let notifLat = null, notifLon = null;
+
+// --- 通知設定モーダルの制御 ---
+async function handleNotifToggle(el) {
+    if (el.checked) {
+        // 通知権限の確認
+        if (Notification.permission === "default") {
+            const permission = await Notification.requestPermission();
+            if (permission !== "granted") {
+                el.checked = false;
+                alert("Notification permission denied.");
+                return;
+            }
+        }
+        document.getElementById('notifModal').style.display = 'flex';
+    } else {
+        isNotifEnabled = false;
+        localStorage.setItem('notifEnabled', 'false');
+    }
+}
+
+function closeNotifModal() {
+    document.getElementById('notifModal').style.display = 'none';
+    // 設定が完了していない場合はスイッチをオフに戻す
+    if (!isNotifEnabled) document.getElementById('notif-toggle').checked = false;
+}
+
+function toggleNotifSearch(show) {
+    const box = document.getElementById('notif-search-box');
+    if (show) box.classList.add('search-active');
+    else box.classList.remove('search-active');
+}
+
+function saveNotifSettings() {
+    const type = document.querySelector('input[name="notifLocType"]:checked').value;
+    if (type === 'current') {
+        if (myLat === null) {
+            alert("Please set a location first");
+            closeNotifModal();
+            return;
+        }
+        notifLat = myLat; notifLon = myLon;
+    } else {
+        if (notifLat === null) {
+            alert("Please select a city first");
+            return;
+        }
+    }
+    isNotifEnabled = true;
+    localStorage.setItem('notifEnabled', 'true');
+    closeNotifModal();
+}
+
+// --- 通知実行ロジック (calculateTotalから呼び出し) ---
+function checkAndNotify(score, statusText) {
+    if (!isNotifEnabled) return;
+
+    const lastNotifyDate = localStorage.getItem('lastNotifyDate');
+    const lastNightlyDate = localStorage.getItem('lastNightlyDate');
+    const today = new Date().toDateString();
+    const now = new Date();
+
+    // 1. 通常通知 (Possible以上で1日1回)
+    if ((statusText === "Possible" || statusText === "High") && lastNotifyDate !== today) {
+        sendPush("Aurora Forecast Pro", "Aurora viewing chances are high in your area tonight!");
+        localStorage.setItem('lastNotifyDate', today);
+    }
+
+    // 2. 21:00 定時通知 (21:00以降に条件を満たしている場合、当日1回)
+    if (now.getHours() >= 21 && (statusText === "Possible" || statusText === "High") && lastNightlyDate !== today) {
+        sendPush("Aurora Alert!", "High chance of seeing aurora in your area right now. Look up!");
+        localStorage.setItem('lastNightlyDate', today);
+    }
+}
+
+function sendPush(title, body) {
+    if (Notification.permission === "granted") {
+        navigator.serviceWorker.ready.then(reg => {
+            reg.showNotification(title, { 
+                body: body, 
+                icon: "icon.png", 
+                vibrate: [200, 100, 200] 
+            });
+        });
+    }
+}
+/* ************************* */
+
+
 function checkAndNotify(score, statusText) {
     const lastNotifyDate = localStorage.getItem('lastNotifyDate');
     const today = new Date().toDateString();
 
-    // Possible (35%+) または High (70%+) で、かつ今日まだ通知していない場合
     if (score >= 35 && lastNotifyDate !== today) {
         if (Notification.permission === "granted") {
             navigator.serviceWorker.ready.then(registration => {
@@ -274,7 +451,7 @@ function checkAndNotify(score, statusText) {
     }
 }
 
-/* 既存関数 (変更なし) */
+/* 既存関数 */
 function formatProbability(score) {
     const rounded = Math.round(score);
     if (rounded <= 0) return "< 1 %";
@@ -433,11 +610,9 @@ function calculateTotal() {
     
     resultEl.innerHTML = statusText;
 
-    // 通知判定の呼び出し
     checkAndNotify(currentTotalScore, statusText.replace(cloudTag, ''));
 }
 
-/* 既存のAPI連携関数 (変更なし) */
 async function reverseGeocode(lat, lon) { try { const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&accept-language=en`); const data = await res.json(); document.getElementById("loc").textContent = (data.address.city || data.address.town || "Unknown") + ", " + data.address.country; } catch (e) { document.getElementById("loc").textContent = lat.toFixed(2) + ", " + lon.toFixed(2); } }
 async function getKp() { try { const res = await fetch(CORS + encodeURIComponent(KP_URL)); const data = await res.json(); const val = parseFloat(data[data.length - 1][1]); const el = document.getElementById("kp"); el.textContent = val.toFixed(1); el.dataset.value = val; if(val >= 5) el.className = "badge high"; else if(val >= 3) el.className = "badge mid"; else el.className = "badge low"; updateTimestamp('time-kp'); return val; } catch(e) { return 0; } }
 async function fetchKp3DayForecast() { try { const res = await fetch(CORS + encodeURIComponent(FORECAST_URL)); const text = await res.text(); const match = text.match(/NOAA Kp index breakdown[\s\S]*?(?=\n[A-Z]|$)/i); document.getElementById("kpForecast").innerText = match ? match[0].trim() : "Updating..."; document.getElementById("kp-short").innerHTML = `<div>Ref 3-day forecast (NOAA)</div>`; updateTimestamp('time-kp3'); } catch(e) { } }
