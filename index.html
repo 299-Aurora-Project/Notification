@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Aurora Forecast Pro v t1.1.3+fix</title>
+<title>Aurora Forecast Pro v t1.1.3</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#0b132b">
 <link rel="apple-touch-icon" href="icon.png">
@@ -64,20 +64,61 @@ pre { background:#0b132b; padding:12px; border-radius:8px; font-family: monospac
 #map-screen { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 9999; background: #000; }
 #map { width: 100%; height: 100%; background: #000; }
 #back-btn { position: absolute; top: 90px; left: 10px; z-index: 10000; background: #21262d; border: 1px solid #30363d; color: white; padding: 8px 16px; }
-.toggle-btn { width: 100%; margin-bottom: 20px; background: #1c2541; border: 1px solid #3a506b; color: #5bc0be; }
-#hidden-data { display: none; }
-pre { background:#0b132b; padding:12px; border-radius:8px; font-family: monospace; font-size: 0.85em; overflow-x: auto; border: 1px solid #3a506b; }
 
 /* 通知設定用スタイル */
 .notification-card { border: 1px dashed #5bc0be !important; margin-top: 10px; }
 .btn-test { background: #ca8a04 !important; }
+
+/* スライドボタン（トグルスイッチ）のスタイル */
+.switch-container {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    margin-top: 12px;
+    gap: 10px;
+}
+.switch-label {
+    font-size: 0.75rem;
+    color: #8b949e;
+}
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 40px;
+    height: 20px;
+}
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: #3a506b;
+    transition: .4s;
+    border-radius: 20px;
+}
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 14px;
+    width: 14px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+input:checked + .slider {
+    background-color: #5bc0be;
+}
+input:checked + .slider:before {
+    transform: translateX(20px);
+}
 </style>
 </head>
-<！--
-キー入力orクリックで画面のどこかをクリックすると、2つの処理が同時に走ります。
-・closeWelcome(): ウェルカム画面を閉じる。
-・closeAllLists(): 開いているメニューやリストなどをすべて閉じる。
--->
 <body onkeydown="closeWelcome()" onclick="closeWelcome(); closeAllLists();">
 
 <div id="welcome-overlay">
@@ -90,7 +131,7 @@ pre { background:#0b132b; padding:12px; border-radius:8px; font-family: monospac
 <div id="home-screen" class="container">
     <div class="header-area">
         <div class="title-row">
-            <h1>🌌 Aurora Forecast Pro<span class="beta-suffix">(beta)</span> <span class="version">v t1.1.3+fix</span></h1>
+            <h1>🌌 Aurora Forecast Pro<span class="beta-suffix">(beta)</span> <span class="version">v t1.1.3</span></h1>
         </div>
         <div class="produce-by">Produce by Shin</div>
     </div>
@@ -114,26 +155,26 @@ pre { background:#0b132b; padding:12px; border-radius:8px; font-family: monospac
         <div id="search-error" class="error-msg">City not found. Please check your input.</div>
     </div>
 
-<div class="card" id="card-main-result">
-    <div id="total-label" class="label-main">Overall Probability</div>
-    
-    <div style="display: flex; flex-direction: column; align-items: flex-end; z-index: 20;">
-        <span class="switch-label">Notification</span>
-        <label class="switch">
-            <input type="checkbox" id="notif-toggle" onchange="handleNotifToggle(this)">
-            <span class="slider"></span>
-        </label>
-    </div>
+    <div class="card" id="card-main-result">
+        <div id="total-label" class="label-main">Overall Probability</div>
+        <div id="total-sub-label" class="label-sub-current">Current:</div>
+        <div id="result" class="badge badge-large low">--</div>
+        <div style="margin-top: 15px;">
+            <button onclick="openModal(); event.stopPropagation();" style="font-size: 0.85em; background: #1c2541; border: 1px solid #3a506b; padding: 8px 16px;">View Details</button>
+        </div>
+        <button id="btn-update-all" class="refresh-btn" onclick="updateAll(); event.stopPropagation();">Update All</button>
 
-    <div id="result" class="badge badge-large low">--</div>
-    
-    <div style="margin-top: 15px;">
-        <button onclick="openModal(); event.stopPropagation();" style="font-size: 0.85em; background: #1c2541; border: 1px solid #3a506b; padding: 8px 16px;">View Details</button>
+/* スライドボタン（トグルスイッチ） */        
+        <div class="switch-container">
+            <span class="switch-label">Notification</span>
+            <label class="switch">
+                <input type="checkbox" id="notif-toggle" onclick="event.stopPropagation();">
+                <span class="slider"></span>
+            </label>
+        </div>
+
+        <div id="time-update-all" class="last-updated"></div>
     </div>
-    
-    <button id="btn-update-all" class="refresh-btn" onclick="updateAll(); event.stopPropagation();">Update All</button>
-    <div id="time-update-all" class="last-updated"></div>
-</div>
 
     <button id="toggle-data-btn" class="toggle-btn" onclick="toggleData(); event.stopPropagation();">Show All Information</button>
 
