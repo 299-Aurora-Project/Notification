@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Aurora Forecast Pro v t1.1.5</title>
+<title>Aurora Forecast Pro v. t1.2.3</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#0b132b">
 <link rel="apple-touch-icon" href="icon.png">
@@ -85,7 +85,7 @@ input:checked + .slider:before { transform: translateX(20px); }
 <div id="home-screen" class="container">
     <div class="header-area">
         <div class="title-row">
-            <h1>🌌 Aurora Forecast Pro<span class="beta-suffix">(beta)</span> <span class="version">v t1.1.5</span></h1>
+            <h1>🌌 Aurora Forecast Pro<span class="beta-suffix">(beta)</span> <span class="version">v. t1.2.3</span></h1>
         </div>
         <div class="produce-by">Produce by Shin</div>
     </div>
@@ -111,7 +111,7 @@ input:checked + .slider:before { transform: translateX(20px); }
 
     <div class="card" id="card-main-result">
         <div id="total-label" class="label-main">Overall Probability</div>
-        <div id="total-sub-label" class="label-sub-current">Current:</div>
+        <div id="total-sub-label" class="label-sub-current">Status:</div>
         <div id="result" class="badge badge-large low">--</div>
         <div style="margin-top: 15px;">
             <button onclick="openModal(); event.stopPropagation();" style="font-size: 0.85em; background: #1c2541; border: 1px solid #3a506b; padding: 8px 16px;">View Details</button>
@@ -342,7 +342,15 @@ async function getCloud() { try { const res = await fetch(`https://api.open-mete
 async function shortForecast() { try { const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${myLat}&longitude=${myLon}&hourly=cloudcover`); const data = await res.json(); cloudDataHourly = data.hourly.cloudcover; const hr = new Date().getHours(); let html = (hr >= 21 || hr < 3) ? `<div>🕒 In 3h: Clouds ${formatProbability(cloudDataHourly[3])}</div>` : `<div>🌙 Tonight(21:00): Clouds ${formatProbability(cloudDataHourly[21])}</div>`; html += `<div>📅 Tomorrow(21:00): Clouds ${formatProbability(cloudDataHourly[45])}</div>`; document.getElementById("forecast").innerHTML = html; } catch(e) { } }
 
 function calculateTotal() {
-    const now = new Date(); const hr = now.getHours();
+    const now = new Date();
+    const hr = now.getHours();
+    
+    const subLabel = document.getElementById("total-sub-label");
+    const isNight = (hr >= 21 || hr < 3);
+    if (subLabel) {
+        subLabel.textContent = isNight ? "Current Situation:" : "Tonight's Forecast (21:00):";
+    }
+    
     let evalKp = parseFloat(document.getElementById("kp").dataset.value) || 0;
     let evalCloud = (!((hr >= 21 || hr < 3)) && cloudDataHourly) ? cloudDataHourly[21] : (parseInt(document.getElementById("cloud").dataset.value) || 0);
     let ovalScore = Math.min(45, (lastAuroraProb * 1.2) + (lastAuroraProb === 0 ? 5 : 10));
