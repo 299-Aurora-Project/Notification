@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Aurora Forecast Pro v t1.2.0</title>
+<title>Aurora Forecast Pro v t1.2.1</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#0b132b">
 <link rel="apple-touch-icon" href="icon.png">
@@ -85,7 +85,7 @@ input:checked + .slider:before { transform: translateX(20px); }
 <div id="home-screen" class="container">
     <div class="header-area">
         <div class="title-row">
-            <h1>🌌 Aurora Forecast Pro<span class="beta-suffix">(beta)</span> <span class="version">v t1.2.0</span></h1>
+            <h1>🌌 Aurora Forecast Pro<span class="beta-suffix">(beta)</span> <span class="version">v t1.2.1</span></h1>
         </div>
         <div class="produce-by">Produce by Shin</div>
     </div>
@@ -150,7 +150,7 @@ input:checked + .slider:before { transform: translateX(20px); }
             <div id="time-kp" class="last-updated"></div>
             <div class="sub-section" id="card-kp3">
                 <div style="font-size: 0.8rem; color: #8b949e; margin-bottom: 5px;">Short Forecast:</div>
-                <div id="kp-short" class="value" style="font-size: 1rem;">--</div>
+                <div id="kp-short" class="value" style="font-size: 0.85rem; color: #5bc0be;">Ref 3-day forecast (NOAA)</div>
                 <pre id="kpForecast" style="margin-top:10px;">--</pre>
                 <button id="btn-refresh-kp3" class="sub-refresh-btn" onclick="refreshItem('kp3'); event.stopPropagation();">Refresh</button>
                 <div id="time-kp3" class="last-updated"></div>
@@ -366,9 +366,18 @@ function setItemLoading(id, isLoading) {
 }
 
 function updateTimestamp(id) {
-    const now = new Date(); const pad = (num) => String(num).padStart(2, '0');
-    const formatted = `${now.getHours()}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
-    const el = document.getElementById(id); if (el) el.textContent = `Last Update: ${formatted}`;
+    const now = new Date();
+    const pad = (num) => String(num).padStart(2, '0');
+    
+    // YYYY-MM-DD 形式
+    const datePart = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+    // HH:MM:SS 形式
+    const timePart = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+    
+    const formatted = `${datePart} ${timePart}`;
+    
+    const el = document.getElementById(id); 
+    if (el) el.textContent = `Last Update: ${formatted}`;
 }
 
 // すべての個別タイムスタンプを現在の時刻で上書きする関数
