@@ -76,7 +76,17 @@ pre { background:#0b132b; padding:12px; border-radius:8px; font-family: monospac
 .thin-arrow { font-size: 2.5rem; color: #5bc0be; font-weight: 100; animation: bounceThin 1.2s infinite; }
 @keyframes bounceThin { 0%, 100% { transform: translateY(0); opacity: 0.5; } 50% { transform: translateY(-15px); opacity: 1; } }
 .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 20000; justify-content: center; align-items: center; cursor: pointer; }
-.modal-content { background: #1c2541; width: 90%; max-width: 450px; padding: 25px; border-radius: 12px; position: relative; border: 1px solid #5bc0be; line-height: 1.6; cursor: default; max-height: 90vh; overflow-y: auto; }
+
+.modal-content { background: #1c2541;
+	width: 90%; 
+	max-width: 450px; 
+	padding:25px;
+	border-radius: 12px; position:
+	relative; border: 1px solid #5bc0be; 
+	line-height: 1.6;
+	cursor: pointer; /* default から pointer に変更 */;
+	max-height: 90vh; overflow-y: auto; }
+
 .close-modal { position: absolute; top: 10px; right: 15px; font-size: 24px; cursor: pointer; color: #8b949e; }
 .score-big { font-size: 2.5rem; text-align: center; color: #fff; margin: 10px 0; font-weight: bold; }
 .detail-table { width: 100%; font-size: 0.85rem; border-collapse: collapse; margin-top: 10px; margin-bottom: 15px; }
@@ -199,8 +209,7 @@ input:checked + .slider:before { transform: translateX(20px); }
 </div>
 
 <div id="detailModal" class="modal-overlay" onclick="closeModal()">
-    <div class="modal-content" onclick="event.stopPropagation()">
-        <span class="close-modal" onclick="closeModal()">&times;</span>
+    <div class="modal-content">
         <div class="modal-title">Probability Details</div>
         <div class="score-big"><span id="score-pct">--</span></div>
         <div style="font-size: 0.85rem; margin-bottom: 15px;">
