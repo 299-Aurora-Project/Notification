@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Aurora Forecast Pro v. t1.2.3</title>
+<title>Aurora Forecast Pro v. t1.2.3+testing1</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#0b132b">
 <link rel="apple-touch-icon" href="icon.png">
@@ -85,7 +85,7 @@ input:checked + .slider:before { transform: translateX(20px); }
 <div id="home-screen" class="container">
     <div class="header-area">
         <div class="title-row">
-            <h1>🌌 Aurora Forecast Pro<span class="beta-suffix">(beta)</span> <span class="version">v. t1.2.3</span></h1>
+            <h1>🌌 Aurora Forecast Pro<span class="beta-suffix">(beta)</span> <span class="version">v. t1.2.3+testing1</span></h1>
         </div>
         <div class="produce-by">Produce by Shin</div>
     </div>
@@ -114,7 +114,7 @@ input:checked + .slider:before { transform: translateX(20px); }
     <div id="total-sub-label" class="label-sub-current">Status:</div>
     <div id="result" class="badge badge-large low">--</div>
     
-    <div class="switch-container" style="position: absolute; top: 15px; right: 15px; margin-top: 0;">
+    <div class="switch-container" style="position: absolute; top: 15px; right: 22px; margin-top: 0;">
         <span class="switch-label">Notification</span>
         <label class="switch">
             <input type="checkbox" id="notif-toggle" onchange="handleNotifToggle(this); event.stopPropagation();">
@@ -124,7 +124,7 @@ input:checked + .slider:before { transform: translateX(20px); }
 
     <div style="margin-top: 15px; display: flex; gap: 10px;">
         <button onclick="openModal(); event.stopPropagation();" style="flex: 1; font-size: 0.85em; background: #1c2541; border: 1px solid #3a506b; padding: 8px 16px;">View Details</button>
-        <button id="btn-update-all" style="flex: 1; font-size: 0.85em; background: #3a506b;" onclick="updateAll(); event.stopPropagation();">Update All</button>
+        <button id="btn-update-all" style="flex: 1; font-size: 0.85em; background: #3a506b;" onclick="updateAll(); event.stopPropagation();">Update Data</button>
     </div>
     
     <div id="time-update-all" class="last-updated" style="margin-top: 10px;"></div>
@@ -244,32 +244,24 @@ async function testNotification() {
 }
 
 /* --- データ更新メインロジック --- */
-async function updateAll() {
-    if (myLat === null) return;
+async function updateData() {
+    // ロケーションが設定されていない(myLatがnull)場合にアラートを出して処理を中断する
+    if (myLat === null) {
+        alert("Please set a location first");
+        return; 
+    }
     
     const btn = document.getElementById('btn-update-all'); 
     if(btn) btn.classList.add('loading-btn');
-
-    // バッジ部分のみをLoading表示にする
     ['result','kp','oval','cloud'].forEach(id => setItemLoading(id, true));
 
     try {
-        await Promise.all([
-            getKp(), 
-            fetchKp3DayForecast(), 
-            checkOval(), 
-            getCloud(), 
-            shortForecast()
-        ]);
-
+        await Promise.all([getKp(), fetchKp3DayForecast(), checkOval(), getCloud(), shortForecast()]);
         calculateTotal();
         runNotificationChecks();
-        
-        // 最後にすべてのタイムスタンプを書き換える
         updateAllTimestamps();
-        
     } catch (e) {
-        console.error("Update All failed:", e);
+        console.error("Update failed:", e);
     } finally {
         if(btn) btn.classList.remove('loading-btn');
     }
