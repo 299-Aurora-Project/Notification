@@ -137,13 +137,19 @@ input:checked + .slider:before { transform: translateX(20px); }
     <div id="total-sub-label" class="label-sub-current">Status:</div>
     <button id="result" class="badge badge-large low" onclick="openModal(); event.stopPropagation();" style="border: none; width: auto; display: inline-block;">--</button>
     
-    <div class="switch-container" style="position: absolute; top: 15px; right: 22px; margin-top: 0;">
-        <span class="switch-label">Notification</span>
-        <label class="switch">
-            <input type="checkbox" id="notif-toggle" onchange="handleNotifToggle(this); event.stopPropagation();">
-            <span class="slider"></span>
-        </label>
-    </div>
+    <div class="switch-container" style="position: absolute; top: 15px; right: 22px; margin-top: 0; display: flex; flex-direction: column; align-items: flex-end;">
+    	<div style="display: flex; align-items: center; gap: 10px;">
+        	<span class="switch-label">Notification</span>
+        	<label class="switch">
+            	<input type="checkbox" id="notif-toggle" onchange="handleNotifToggle(this); event.stopPropagation();">
+            	<span class="slider"></span>
+        	</label>
+    	</div>
+    	<div id="target-area-display" style="font-size: 0.65rem; color: #5bc0be; margin-top: 5px; text-align: right; line-height: 1.2; display: none;">
+        	Target area:<br>
+        	<span id="target-area-name" style="color: #eaeaea;"></span>
+    	</div>
+	</div>
 
     <div style="margin-top: 15px; display: flex; justify-content: flex-end;">
     	<button id="btn-update-all" style="width: 25%; font-size: 0.85em; background: #3a506b; padding: 8px 0;" onclick="updateAll(); event.stopPropagation();">Update Data</button>
@@ -382,18 +388,35 @@ async function reverseGeocode(lat, lon) { try { const res = await fetch(`https:/
 
 /* Notificationスイッチ */
 function handleNotifToggle(checkbox) {
+    const targetDisplay = document.getElementById("target-area-display");
+    const targetName = document.getElementById("target-area-name");
+
     if (checkbox.checked) {
         if (myLat === null) {
-            // 修正：alertの代わりにオーバーレイを表示
             document.getElementById('welcome-overlay').style.display = 'flex';
-            // チェックを強制的に外す（未設定でONにさせないため）
             checkbox.checked = false;
+            targetDisplay.style.display = "none";
             return;
         }
-        // 設定済みの場合は通知を有効化
-        alert(`Notifications have been set.\nTarget area: ${document.getElementById("loc").textContent}`);
+        
+        // 1. まず表示を更新（スイッチのON表示とTarget areaの表示）
+        const currentLocation = document.getElementById("loc").textContent;
+        targetName.textContent = currentLocation;
+        targetDisplay.style.display = "block";
+        
         notifLat = myLat;
         notifLon = myLon;
+
+        // 2. わずかに遅らせて alert を出すことで、スイッチの描画を優先させる
+        setTimeout(() => {
+            alert(`Notifications have been set.\nTarget area: ${currentLocation}`);
+        }, 15);
+        
+    } else {
+        targetDisplay.style.display = "none";
+        setTimeout(() => {
+            alert(`Notifications have been cancelled.`);
+        }, 15);
     }
 }
 
