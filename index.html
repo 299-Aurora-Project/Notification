@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Aurora Forecast Pro v. t1.2.5</title>
+<title>Aurora Forecast Pro v. t1.2.6</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#0b132b">
 <link rel="apple-touch-icon" href="icon.png">
@@ -23,7 +23,30 @@ h1 { margin: 0; font-size: 1.5rem; }
 .label-sub-current { font-size: 0.8rem; color: #8b949e; margin-bottom: 10px; }
 .value { font-size:1.6em; margin-top:4px; min-height: 1.2em; }
 .sub-section { margin-top: 15px; padding-top: 15px; border-top: 1px solid #30363d; position: relative; }
-.badge { display:inline-block; padding:10px 24px; border-radius:30px; font-weight:bold; font-size: 1.2rem; letter-spacing: 0.05em; box-shadow: 0 4px 15px rgba(0,0,0,0.3); margin-top: 5px; position: relative; }
+
+.badge {
+    display: inline-block;
+    padding: 10px 24px;
+    border-radius: 30px;
+    font-weight: bold;
+    font-size: 1.2rem;
+    letter-spacing: 0.05em;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    margin-top: 5px;
+    position: relative;
+    /* --- 追加・修正 --- */
+    border: none;       /* ボタンの枠線を消す */
+    cursor: pointer;    /* マウスを乗せた時に指マークにする */
+    color: white;       /* 文字色を白に固定 */
+    transition: transform 0.1s, filter 0.2s; /* 押し心地のためのアニメーション */
+}
+
+/* ボタンを押した瞬間のリアクション */
+.badge:active {
+    transform: scale(0.95); /* 少し凹む演出 */
+    filter: brightness(0.9); /* 少し暗くする演出 */
+}
+
 .badge-large { font-size: 1.5rem; }
 .low { background:#475569; } .mid { background:#ca8a04; } .high { background:#dc2626; }
 .cloud-icon { font-size: 0.8em; margin-left: 8px; vertical-align: middle; }
@@ -85,7 +108,7 @@ input:checked + .slider:before { transform: translateX(20px); }
 <div id="home-screen" class="container">
     <div class="header-area">
         <div class="title-row">
-            <h1>🌌 Aurora Forecast Pro<span class="beta-suffix">(beta)</span> <span class="version">v. t1.2.5</span></h1>
+            <h1>🌌 Aurora Forecast Pro<span class="beta-suffix">(beta)</span> <span class="version">v. t1.2.6</span></h1>
         </div>
         <div class="produce-by">Produce by Shin</div>
     </div>
@@ -112,7 +135,7 @@ input:checked + .slider:before { transform: translateX(20px); }
     <div class="card" id="card-main-result">
     <div id="total-label" class="label-main">Overall Probability</div>
     <div id="total-sub-label" class="label-sub-current">Status:</div>
-    <div id="result" class="badge badge-large low">--</div>
+    <button id="result" class="badge badge-large low" onclick="openModal(); event.stopPropagation();" style="border: none; width: auto; display: inline-block;">--</button>
     
     <div class="switch-container" style="position: absolute; top: 15px; right: 22px; margin-top: 0;">
         <span class="switch-label">Notification</span>
@@ -122,9 +145,8 @@ input:checked + .slider:before { transform: translateX(20px); }
         </label>
     </div>
 
-    <div style="margin-top: 15px; display: flex; gap: 10px;">
-        <button onclick="openModal(); event.stopPropagation();" style="flex: 1; font-size: 0.85em; background: #1c2541; border: 1px solid #3a506b; padding: 8px 16px;">View Details</button>
-        <button id="btn-update-all" style="flex: 1; font-size: 0.85em; background: #3a506b;" onclick="updateAll(); event.stopPropagation();">Update Data</button>
+    <div style="margin-top: 15px; display: flex; justify-content: flex-end;">
+    	<button id="btn-update-all" style="width: 25%; font-size: 0.85em; background: #3a506b; padding: 8px 0;" onclick="updateAll(); event.stopPropagation();">Update Data</button>
     </div>
     
     <div id="time-update-all" class="last-updated" style="margin-top: 10px;"></div>
@@ -303,10 +325,14 @@ function calculateTotal() {
     else currentTotalScore = potentialScore;
 
     const resultEl = document.getElementById("result");
-    if (currentTotalScore >= 70) {
+    
+    // 表示と判定を一致させるために四捨五入
+    const displayScore = Math.round(currentTotalScore);
+
+    if (displayScore >= 70) {
         resultEl.textContent = "High";
         resultEl.className = "badge badge-large high";
-    } else if (currentTotalScore >= 35) {
+    } else if (displayScore >= 35) {
         resultEl.textContent = "Possible";
         resultEl.className = "badge badge-large mid";
     } else {
