@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Aurora Forecast Pro v. t1.2.3+testing1</title>
+<title>Aurora Forecast Pro v. t1.2.5</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#0b132b">
 <link rel="apple-touch-icon" href="icon.png">
@@ -85,7 +85,7 @@ input:checked + .slider:before { transform: translateX(20px); }
 <div id="home-screen" class="container">
     <div class="header-area">
         <div class="title-row">
-            <h1>🌌 Aurora Forecast Pro<span class="beta-suffix">(beta)</span> <span class="version">v. t1.2.3+testing1</span></h1>
+            <h1>🌌 Aurora Forecast Pro<span class="beta-suffix">(beta)</span> <span class="version">v. t1.2.5</span></h1>
         </div>
         <div class="produce-by">Produce by Shin</div>
     </div>
@@ -244,24 +244,38 @@ async function testNotification() {
 }
 
 /* --- データ更新メインロジック --- */
-async function updateData() {
-    // ロケーションが設定されていない(myLatがnull)場合にアラートを出して処理を中断する
+async function updateAll() {
+    // 修正：ロケーション未設定時の処理を追加
     if (myLat === null) {
-        alert("Please set a location first");
-        return; 
+        // ウェルカムオーバーレイを再表示してユーザーに通知する
+        document.getElementById('welcome-overlay').style.display = 'flex';
+        // あるいはシンプルにアラートを出す場合: alert("Please set a location first");
+        return;
     }
     
     const btn = document.getElementById('btn-update-all'); 
     if(btn) btn.classList.add('loading-btn');
+
+    // バッジ部分のみをLoading表示にする
     ['result','kp','oval','cloud'].forEach(id => setItemLoading(id, true));
 
     try {
-        await Promise.all([getKp(), fetchKp3DayForecast(), checkOval(), getCloud(), shortForecast()]);
+        await Promise.all([
+            getKp(), 
+            fetchKp3DayForecast(), 
+            checkOval(), 
+            getCloud(), 
+            shortForecast()
+        ]);
+
         calculateTotal();
         runNotificationChecks();
+        
+        // 最後にタイムスタンプを書き換える
         updateAllTimestamps();
+        
     } catch (e) {
-        console.error("Update failed:", e);
+        console.error("Update Data failed:", e);
     } finally {
         if(btn) btn.classList.remove('loading-btn');
     }
@@ -321,10 +335,42 @@ function showAutocomplete(results) { closeAllLists(); if (!results) return; cons
 function closeAllLists() { document.getElementById("autocomplete-list").innerHTML = ""; }
 function closeWelcome() { document.getElementById('welcome-overlay').style.display = 'none'; }
 function toggleData() { const h = document.getElementById("hidden-data"), b = document.getElementById("toggle-data-btn"); const isH = h.style.display !== "block"; h.style.display = isH ? "block" : "none"; b.textContent = isH ? "Show Less Information" : "Show All Information"; }
-function openModal() { if (myLat === null) return alert("Please set a location first"); document.getElementById("score-pct").textContent = formatProbability(currentTotalScore); document.getElementById("detailModal").style.display = "flex"; }
+
+/* View Detailsボタン */
+function openModal() {
+    // 修正：alertではなくオーバーレイを表示する挙動に統一
+    if (myLat === null) {
+        document.getElementById('welcome-overlay').style.display = 'flex';
+        return;
+    }
+    
+    document.getElementById("score-pct").textContent = formatProbability(currentTotalScore);
+    document.getElementById("detailModal").style.display = "flex";
+}
+
+
+
+
 function closeModal() { document.getElementById("detailModal").style.display = "none"; }
 async function reverseGeocode(lat, lon) { try { const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&accept-language=en`); const data = await res.json(); document.getElementById("loc").textContent = (data.address.city || data.address.town || "Unknown") + ", " + data.address.country; } catch (e) { document.getElementById("loc").textContent = lat.toFixed(2) + ", " + lon.toFixed(2); } }
-function handleNotifToggle(checkbox) { if (checkbox.checked) { if (myLat === null) { alert("Please set a location first"); checkbox.checked = false; return; } alert(`Notifications have been set.\nTarget area: ${document.getElementById("loc").textContent}`); notifLat = myLat; notifLon = myLon; } }
+
+/* Notificationスイッチ */
+function handleNotifToggle(checkbox) {
+    if (checkbox.checked) {
+        if (myLat === null) {
+            // 修正：alertの代わりにオーバーレイを表示
+            document.getElementById('welcome-overlay').style.display = 'flex';
+            // チェックを強制的に外す（未設定でONにさせないため）
+            checkbox.checked = false;
+            return;
+        }
+        // 設定済みの場合は通知を有効化
+        alert(`Notifications have been set.\nTarget area: ${document.getElementById("loc").textContent}`);
+        notifLat = myLat;
+        notifLon = myLon;
+    }
+}
+
 function runNotificationChecks() { if (!document.getElementById('notif-toggle').checked) return; const lat = notifLat || myLat, lon = notifLon || myLon; if (lat === null) return; if (currentTotalScore >= 35) { triggerPushNotification("Aurora Alert!", "Aurora viewing chances are high in your area!", "lastNotifyChanceDate"); } }
 function triggerPushNotification(title, message, storageKey) { const today = new Date().toDateString(); if (localStorage.getItem(storageKey) === today) return; if (Notification.permission === "granted") { navigator.serviceWorker.ready.then(reg => { reg.showNotification(title, { body: message, icon: "icon.png" }); localStorage.setItem(storageKey, today); }); } }
 
