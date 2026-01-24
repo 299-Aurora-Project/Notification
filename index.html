@@ -392,6 +392,17 @@ async function searchCity() {
             
             // フォーカスを外してキーボードを閉じる
             cityInput.blur();
+            
+            // ビューポートをリセットしてズームを強制解除
+            const viewport = document.querySelector('meta[name="viewport"]');
+            if (viewport) {
+                const originalContent = viewport.content;
+                viewport.content = 'width=device-width, initial-scale=1, maximum-scale=1';
+                setTimeout(() => {
+                    viewport.content = originalContent; // 元の設定に戻す
+                }, 300);
+            }
+            
             // 画面のズーム/位置をリセット
             window.scrollTo({ top: 0, behavior: 'smooth' }); // 面最上部へスムーズに戻る
 
@@ -464,6 +475,18 @@ function showAutocomplete(results) {
             
             // フォーカスを外してキーボードを閉じる
             inputField.blur();
+            
+            // --- ズーム解除 ---
+            inputField.blur(); 
+            const viewport = document.querySelector('meta[name="viewport"]');
+            if (viewport) {
+                const originalContent = viewport.content;
+                viewport.content = 'width=device-width, initial-scale=1, maximum-scale=1';
+                setTimeout(() => {
+                    viewport.content = originalContent;
+                }, 300);
+            }
+            
             // 画面最上部へスムーズに戻る
             window.scrollTo({ top: 0, behavior: 'smooth' }); 
 
