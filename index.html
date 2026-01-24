@@ -154,8 +154,12 @@ input:checked + .slider:before { transform: translateX(20px); }
 	</div>
 
     <div style="margin-top: 15px; display: flex; justify-content: flex-end;">
-    	<button id="btn-update-all" style="width: 25%; font-size: 0.85em; background: #3a506b; padding: 8px 0;" onclick="updateAll(); event.stopPropagation();">Update Data</button>
-    </div>
+    	<button id="btn-update-all" 
+            	style="width: auto; min-width: 100px; white-space: nowrap; font-size: 0.85em; background: #3a506b; padding: 8px 12px;" 
+            	onclick="updateAll(); event.stopPropagation();">
+        	Update Data
+    	</button>
+	</div>
     
     <div id="time-update-all" class="last-updated" style="margin-top: 10px;"></div>
 </div>
