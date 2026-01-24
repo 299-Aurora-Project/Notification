@@ -110,24 +110,25 @@ input:checked + .slider:before { transform: translateX(20px); }
     </div>
 
     <div class="card" id="card-main-result">
-        <div id="total-label" class="label-main">Overall Probability</div>
-        <div id="total-sub-label" class="label-sub-current">Status:</div>
-        <div id="result" class="badge badge-large low">--</div>
-        <div style="margin-top: 15px;">
-            <button onclick="openModal(); event.stopPropagation();" style="font-size: 0.85em; background: #1c2541; border: 1px solid #3a506b; padding: 8px 16px;">View Details</button>
-        </div>
-        <button id="btn-update-all" class="refresh-btn" onclick="updateAll(); event.stopPropagation();">Update All</button>
-        
-        <div class="switch-container">
-            <span class="switch-label">Notification</span>
-            <label class="switch">
-                <input type="checkbox" id="notif-toggle" onchange="handleNotifToggle(this); event.stopPropagation();">
-                <span class="slider"></span>
-            </label>
-        </div>
-
-        <div id="time-update-all" class="last-updated"></div>
+    <div id="total-label" class="label-main">Overall Probability</div>
+    <div id="total-sub-label" class="label-sub-current">Status:</div>
+    <div id="result" class="badge badge-large low">--</div>
+    
+    <div class="switch-container" style="position: absolute; top: 15px; right: 15px; margin-top: 0;">
+        <span class="switch-label">Notification</span>
+        <label class="switch">
+            <input type="checkbox" id="notif-toggle" onchange="handleNotifToggle(this); event.stopPropagation();">
+            <span class="slider"></span>
+        </label>
     </div>
+
+    <div style="margin-top: 15px; display: flex; gap: 10px;">
+        <button onclick="openModal(); event.stopPropagation();" style="flex: 1; font-size: 0.85em; background: #1c2541; border: 1px solid #3a506b; padding: 8px 16px;">View Details</button>
+        <button id="btn-update-all" style="flex: 1; font-size: 0.85em; background: #3a506b;" onclick="updateAll(); event.stopPropagation();">Update All</button>
+    </div>
+    
+    <div id="time-update-all" class="last-updated" style="margin-top: 10px;"></div>
+</div>
 
     <button id="toggle-data-btn" class="toggle-btn" onclick="toggleData(); event.stopPropagation();">Show All Information</button>
 
@@ -138,22 +139,16 @@ input:checked + .slider:before { transform: translateX(20px); }
             <div id="oval" class="badge low">--</div>
             <div id="oval-prob" style="font-size: 0.9rem; color: #8b949e; margin: 10px 0;"></div>
             <button onclick="showMapScreen(); event.stopPropagation();" style="background: #238636;">View Aurora Map</button>
-            <button id="btn-refresh-oval" class="refresh-btn" onclick="refreshItem('oval'); event.stopPropagation();">Refresh</button>
-            <div id="time-oval" class="last-updated"></div>
         </div>
 
         <div class="card" id="card-kp-group">
             <div class="label-main">Kp Index</div>
             <div class="label-sub-current">Current:</div>
             <div id="kp" class="badge low">--</div>
-            <button id="btn-refresh-kp" class="refresh-btn" onclick="refreshItem('kp'); event.stopPropagation();">Refresh</button>
-            <div id="time-kp" class="last-updated"></div>
             <div class="sub-section" id="card-kp3">
                 <div style="font-size: 0.8rem; color: #8b949e; margin-bottom: 5px;">Short Forecast:</div>
                 <div id="kp-short" class="value" style="font-size: 0.85rem; color: #5bc0be;">Ref 3-day forecast (NOAA)</div>
                 <pre id="kpForecast" style="margin-top:10px;">--</pre>
-                <button id="btn-refresh-kp3" class="sub-refresh-btn" onclick="refreshItem('kp3'); event.stopPropagation();">Refresh</button>
-                <div id="time-kp3" class="last-updated"></div>
             </div>
         </div>
 
@@ -161,13 +156,9 @@ input:checked + .slider:before { transform: translateX(20px); }
             <div class="label-main">Cloud Cover</div>
             <div class="label-sub-current">Current:</div>
             <div id="cloud" class="badge low">--</div>
-            <button id="btn-refresh-cloud" class="refresh-btn" onclick="refreshItem('cloud'); event.stopPropagation();">Refresh</button>
-            <div id="time-cloud" class="last-updated"></div>
             <div class="sub-section" id="card-short">
                 <div style="font-size: 0.8rem; color: #8b949e; margin-bottom: 5px;">Short Forecast:</div>
                 <div id="forecast" class="value" style="font-size: 1rem;">--</div>
-                <button id="btn-refresh-short" class="sub-refresh-btn" onclick="refreshItem('short'); event.stopPropagation();">Refresh</button>
-                <div id="time-short" class="last-updated"></div>
             </div>
         </div>
     </div>
@@ -226,7 +217,23 @@ if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('sw.js').then(() => console.log("SW Registered"));
 }
 
-/* 通知・タイムスタンプ関連 */
+/* --- タイムスタンプ・通知関連 --- */
+function updateTimestamp(id) {
+    const now = new Date();
+    const pad = (num) => String(num).padStart(2, '0');
+    const formatted = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+    const el = document.getElementById(id);
+    if (el) {
+        el.textContent = `Last Update: ${formatted}`;
+    }
+}
+
+function updateAllTimestamps() {
+    ['time-update-all', 'time-kp', 'time-kp3', 'time-oval', 'time-cloud', 'time-short'].forEach(id => {
+        updateTimestamp(id);
+    });
+}
+
 async function testNotification() {
     const registration = await navigator.serviceWorker.ready;
     let permission = Notification.permission;
@@ -236,110 +243,37 @@ async function testNotification() {
     }
 }
 
-function updateTimestamp(id) {
-    const now = new Date(); const pad = (num) => String(num).padStart(2, '0');
-    const formatted = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
-    const el = document.getElementById(id); if (el) el.textContent = `Last Update: ${formatted}`;
-}
-
-function updateAllTimestamps() {
-    ['time-update-all','time-kp','time-kp3','time-oval','time-cloud','time-short'].forEach(id => updateTimestamp(id));
-}
-
-/* マップ関連 */
-function initMap() {
-    // 南北のみを制限する（経度は制限しないことで無限スクロールを実現）
-    const southLimit = -70;
-    const northLimit = 90;
-
-    map = L.map('map', { 
-        minZoom: 2,
-        maxZoom: 10,
-        worldCopyJump: true,
-        maxBounds: [[southLimit, -540], [northLimit, 540]], // 経度方向に余裕を持たせる
-        maxBoundsViscosity: 1.0
-    });
-
-    const startLat = myLat !== null ? myLat : 70;
-    const startLon = myLon !== null ? myLon : 0;
-    map.setView([startLat, startLon], 3);
-
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { noWrap: false }).addTo(map);
-
-    auroraLayer = L.layerGroup().addTo(map);
-    if (cachedAuroraData) drawAurora(cachedAuroraData);
-    updateMapMarker();
-}
-
-function drawAurora(data) {
-    auroraLayer.clearLayers();
-    data.coordinates.forEach(p => {
-        if (p[2] > 10) {
-            let baseLon = p[0] > 180 ? p[0] - 360 : p[0];
-            let color = p[2] > 50 ? '#ff4500' : (p[2] > 25 ? '#ffff00' : '#00ff00');
-            // 無限スクロールに対応するため、複数の世界に描画
-            [-360, 0, 360].forEach(offset => {
-                L.rectangle([[p[1], baseLon + offset], [p[1] + 2, baseLon + 2 + offset]], {
-                    color: color, weight: 0, fillOpacity: p[2] / 100, interactive: false
-                }).addTo(auroraLayer);
-            });
-        }
-    });
-}
-
-function showMapScreen() { 
-    lastScrollPos = window.pageYOffset;
-    document.getElementById('home-screen').style.display = 'none'; 
-    document.getElementById('map-screen').style.display = 'block'; 
-    if (!map) initMap(); 
-    else {
-        if (myLat !== null) map.setView([myLat, myLon], map.getZoom());
-        updateMapMarker();
-        setTimeout(() => { map.invalidateSize(); }, 50);
-    }
-}
-function hideMapScreen() { document.getElementById('map-screen').style.display = 'none'; document.getElementById('home-screen').style.display = 'block'; window.scrollTo(0, lastScrollPos); }
-function updateMapMarker() { if (!map || myLat === null) return; if (userMarker) userMarker.setLatLng([myLat, myLon]); else userMarker = L.circleMarker([myLat, myLon], { color: '#5bc0be', radius: 7, weight: 3, fillOpacity: 1.0 }).addTo(map); }
-
-/* 位置・データ取得ロジック */
-function handleNotifToggle(checkbox) {
-    if (checkbox.checked) {
-        if (myLat === null) { alert("Please set a location first"); checkbox.checked = false; return; }
-        alert(`Notifications have been set.\nTarget area: ${document.getElementById("loc").textContent}`);
-        notifLat = myLat; notifLon = myLon;
-    }
-}
-
-async function getLocation() {
-    setItemLoading('loc', true);
-    navigator.geolocation.getCurrentPosition(async p => {
-        myLat = p.coords.latitude; myLon = p.coords.longitude;
-        await reverseGeocode(myLat, myLon); updateAll();
-    }, err => { alert("GPS Fetch Failed"); document.getElementById('loc').textContent = "Not Set"; });
-}
-
+/* --- データ更新メインロジック --- */
 async function updateAll() {
     if (myLat === null) return;
-    const btn = document.getElementById('btn-update-all'); if(btn) btn.classList.add('loading-btn');
+    
+    const btn = document.getElementById('btn-update-all'); 
+    if(btn) btn.classList.add('loading-btn');
+
+    // バッジ部分のみをLoading表示にする
     ['result','kp','oval','cloud'].forEach(id => setItemLoading(id, true));
-    await Promise.all([getKp(), fetchKp3DayForecast(), checkOval(), getCloud(), shortForecast()]);
-    calculateTotal();
-    if(btn) btn.classList.remove('loading-btn');
-    updateAllTimestamps();
-}
 
-async function refreshItem(type) {
-    if (myLat === null) return alert("Please set a location first");
-    if (type === 'kp') await getKp(); if (type === 'kp3') await fetchKp3DayForecast(); if (type === 'oval') await checkOval(); if (type === 'cloud') await getCloud(); if (type === 'short') await shortForecast();
-    calculateTotal(); updateAllTimestamps();
-}
+    try {
+        await Promise.all([
+            getKp(), 
+            fetchKp3DayForecast(), 
+            checkOval(), 
+            getCloud(), 
+            shortForecast()
+        ]);
 
-/* API取得 & 計算 (省略なし) */
-async function getKp() { try { const res = await fetch(CORS + encodeURIComponent(KP_URL)); const data = await res.json(); const val = parseFloat(data[data.length - 1][1]); const el = document.getElementById("kp"); el.textContent = val.toFixed(1); el.dataset.value = val; el.className = "badge " + (val >= 5 ? "high" : (val >= 3 ? "mid" : "low")); return val; } catch(e) { return 0; } }
-async function fetchKp3DayForecast() { try { const res = await fetch(CORS + encodeURIComponent(FORECAST_URL)); const text = await res.text(); const match = text.match(/NOAA Kp index breakdown[\s\S]*?(?=\n[A-Z]|$)/i); document.getElementById("kpForecast").innerText = match ? match[0].trim() : "Updating..."; } catch(e) { } }
-async function checkOval() { try { const res = await fetch(CORS + encodeURIComponent(OVAL_URL)); const data = await res.json(); cachedAuroraData = data; if (map) drawAurora(data); let bestProb = 0; let minDiff = 999; data.coordinates.forEach(p => { let diff = Math.abs(myLat - p[1]) + Math.abs(myLon - (p[0] > 180 ? p[0] - 360 : p[0])); if (diff < minDiff) { minDiff = diff; bestProb = p[2]; } }); lastAuroraProb = bestProb; document.getElementById("oval-prob").textContent = `Probability at location: ${bestProb}%`; document.getElementById("oval").className = "badge " + (bestProb >= 10 ? "high" : "low"); document.getElementById("oval").textContent = (bestProb >= 10 ? "Near Oval" : "Outside Oval"); } catch(e) { } }
-async function getCloud() { try { const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${myLat}&longitude=${myLon}&current=cloudcover`); const data = await res.json(); const val = data.current.cloudcover; const el = document.getElementById("cloud"); el.textContent = formatProbability(val); el.dataset.value = val; el.className = "badge " + (val <= 20 ? "high" : (val <= 60 ? "mid" : "low")); return val; } catch(e) { return 100; } }
-async function shortForecast() { try { const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${myLat}&longitude=${myLon}&hourly=cloudcover`); const data = await res.json(); cloudDataHourly = data.hourly.cloudcover; const hr = new Date().getHours(); let html = (hr >= 21 || hr < 3) ? `<div>🕒 In 3h: Clouds ${formatProbability(cloudDataHourly[3])}</div>` : `<div>🌙 Tonight(21:00): Clouds ${formatProbability(cloudDataHourly[21])}</div>`; html += `<div>📅 Tomorrow(21:00): Clouds ${formatProbability(cloudDataHourly[45])}</div>`; document.getElementById("forecast").innerHTML = html; } catch(e) { } }
+        calculateTotal();
+        runNotificationChecks();
+        
+        // 最後にすべてのタイムスタンプを書き換える
+        updateAllTimestamps();
+        
+    } catch (e) {
+        console.error("Update All failed:", e);
+    } finally {
+        if(btn) btn.classList.remove('loading-btn');
+    }
+}
 
 function calculateTotal() {
     const now = new Date();
@@ -350,33 +284,62 @@ function calculateTotal() {
     if (subLabel) {
         subLabel.textContent = isNight ? "Current Situation:" : "Tonight's Forecast (21:00):";
     }
-    
+
     let evalKp = parseFloat(document.getElementById("kp").dataset.value) || 0;
-    let evalCloud = (!((hr >= 21 || hr < 3)) && cloudDataHourly) ? cloudDataHourly[21] : (parseInt(document.getElementById("cloud").dataset.value) || 0);
+    let evalCloud = (!isNight && cloudDataHourly) ? cloudDataHourly[21] : (parseInt(document.getElementById("cloud").dataset.value) || 0);
+
     let ovalScore = Math.min(45, (lastAuroraProb * 1.2) + (lastAuroraProb === 0 ? 5 : 10));
     let kpScore = Math.min(40, evalKp * 12 + (evalKp >= 3 ? 5 : 0));
     let potentialScore = (ovalScore + kpScore + 15) * (lastAuroraProb > 0 ? 1.0 : (evalKp >= 4 ? 0.3 : 0));
+
     if (evalCloud > 85) currentTotalScore = potentialScore * 0.1;
     else if (evalCloud > 70) currentTotalScore = potentialScore * 0.4;
     else currentTotalScore = potentialScore;
+
     const resultEl = document.getElementById("result");
-    if (currentTotalScore >= 70) { resultEl.textContent = "High"; resultEl.className = "badge badge-large high"; } 
-    else if (currentTotalScore >= 35) { resultEl.textContent = "Possible"; resultEl.className = "badge badge-large mid"; } 
-    else { resultEl.innerHTML = `Low${(potentialScore >= 35 && evalCloud > 70 ? '<span class="cloud-icon">☁️</span>' : '')}`; resultEl.className = "badge badge-large low"; }
+    if (currentTotalScore >= 70) {
+        resultEl.textContent = "High";
+        resultEl.className = "badge badge-large high";
+    } else if (currentTotalScore >= 35) {
+        resultEl.textContent = "Possible";
+        resultEl.className = "badge badge-large mid";
+    } else {
+        resultEl.innerHTML = `Low${(potentialScore >= 35 && evalCloud > 70 ? '<span class="cloud-icon">☁️</span>' : '')}`;
+        resultEl.className = "badge badge-large low";
+    }
 }
 
-/* ユーティリティ */
+/* --- 地図・位置情報・その他 (以下は変更なし) --- */
+async function getLocation() { setItemLoading('loc', true); navigator.geolocation.getCurrentPosition(async p => { myLat = p.coords.latitude; myLon = p.coords.longitude; await reverseGeocode(myLat, myLon); updateAll(); }, err => { alert("GPS Fetch Failed"); document.getElementById('loc').textContent = "Not Set"; }); }
+function initMap() { const southLimit = -70, northLimit = 90; map = L.map('map', { minZoom: 2, maxZoom: 10, worldCopyJump: true, maxBounds: [[southLimit, -540], [northLimit, 540]], maxBoundsViscosity: 1.0 }); const startLat = myLat !== null ? myLat : 70, startLon = myLon !== null ? myLon : 0; map.setView([startLat, startLon], 3); L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { noWrap: false }).addTo(map); auroraLayer = L.layerGroup().addTo(map); if (cachedAuroraData) drawAurora(cachedAuroraData); updateMapMarker(); }
+function drawAurora(data) { auroraLayer.clearLayers(); data.coordinates.forEach(p => { if (p[2] > 10) { let baseLon = p[0] > 180 ? p[0] - 360 : p[0]; let color = p[2] > 50 ? '#ff4500' : (p[2] > 25 ? '#ffff00' : '#00ff00'); [-360, 0, 360].forEach(offset => { L.rectangle([[p[1], baseLon + offset], [p[1] + 2, baseLon + 2 + offset]], { color: color, weight: 0, fillOpacity: p[2] / 100, interactive: false }).addTo(auroraLayer); }); } }); }
+function showMapScreen() { lastScrollPos = window.pageYOffset; document.getElementById('home-screen').style.display = 'none'; document.getElementById('map-screen').style.display = 'block'; if (!map) initMap(); else { if (myLat !== null) map.setView([myLat, myLon], map.getZoom()); updateMapMarker(); setTimeout(() => { map.invalidateSize(); }, 50); } }
+function hideMapScreen() { document.getElementById('map-screen').style.display = 'none'; document.getElementById('home-screen').style.display = 'block'; window.scrollTo(0, lastScrollPos); }
+function updateMapMarker() { if (!map || myLat === null) return; if (userMarker) userMarker.setLatLng([myLat, myLon]); else userMarker = L.circleMarker([myLat, myLon], { color: '#5bc0be', radius: 7, weight: 3, fillOpacity: 1.0 }).addTo(map); }
+async function getKp() { try { const res = await fetch(CORS + encodeURIComponent(KP_URL)); const data = await res.json(); const val = parseFloat(data[data.length - 1][1]); const el = document.getElementById("kp"); el.textContent = val.toFixed(1); el.dataset.value = val; el.className = "badge " + (val >= 5 ? "high" : (val >= 3 ? "mid" : "low")); return val; } catch(e) { return 0; } }
+async function fetchKp3DayForecast() { try { const res = await fetch(CORS + encodeURIComponent(FORECAST_URL)); const text = await res.text(); const match = text.match(/NOAA Kp index breakdown[\s\S]*?(?=\n[A-Z]|$)/i); document.getElementById("kpForecast").innerText = match ? match[0].trim() : "Updating..."; } catch(e) { } }
+async function checkOval() { try { const res = await fetch(CORS + encodeURIComponent(OVAL_URL)); const data = await res.json(); cachedAuroraData = data; if (map) drawAurora(data); let bestProb = 0, minDiff = 999; data.coordinates.forEach(p => { let diff = Math.abs(myLat - p[1]) + Math.abs(myLon - (p[0] > 180 ? p[0] - 360 : p[0])); if (diff < minDiff) { minDiff = diff; bestProb = p[2]; } }); lastAuroraProb = bestProb; document.getElementById("oval-prob").textContent = `Probability at location: ${bestProb}%`; document.getElementById("oval").className = "badge " + (bestProb >= 10 ? "high" : "low"); document.getElementById("oval").textContent = (bestProb >= 10 ? "Near Oval" : "Outside Oval"); } catch(e) { } }
+async function getCloud() { try { const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${myLat}&longitude=${myLon}&current=cloudcover`); const data = await res.json(); const val = data.current.cloudcover; const el = document.getElementById("cloud"); el.textContent = formatProbability(val); el.dataset.value = val; el.className = "badge " + (val <= 20 ? "high" : (val <= 60 ? "mid" : "low")); return val; } catch(e) { return 100; } }
+async function shortForecast() { try { const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${myLat}&longitude=${myLon}&hourly=cloudcover`); const data = await res.json(); cloudDataHourly = data.hourly.cloudcover; const hr = new Date().getHours(); let html = (hr >= 21 || hr < 3) ? `<div>🕒 In 3h: Clouds ${formatProbability(cloudDataHourly[3])}</div>` : `<div>🌙 Tonight(21:00): Clouds ${formatProbability(cloudDataHourly[21])}</div>`; html += `<div>📅 Tomorrow(21:00): Clouds ${formatProbability(cloudDataHourly[45])}</div>`; document.getElementById("forecast").innerHTML = html; } catch(e) { } }
 function setItemLoading(id, isLoading) { const el = document.getElementById(id); if (el && isLoading) el.innerHTML = '<span class="loading-text">⌛ <i>Loading...</i></span>'; }
 function formatProbability(s) { const r = Math.round(s); return (r <= 0 ? "< 1" : (r >= 100 ? "> 99" : r)) + " %"; }
 async function searchCity() { const city = document.getElementById("cityInput").value; try { const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=en`); const data = await res.json(); if (data.results?.length > 0) { const r = data.results[0]; myLat = r.latitude; myLon = r.longitude; document.getElementById("loc").textContent = `${r.name}, ${r.country}`; updateAll(); } } catch (e) { alert("Search Error"); } }
-function handleCityInput(el, type) { const val = el.value.trim(); document.getElementById("btn-search").disabled = val.length === 0; clearTimeout(searchTimer); if (val.length < 2) return; searchTimer = setTimeout(async () => { const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(val)}&count=5&language=en`); const data = await res.json(); showAutocomplete(data.results); }, 300); }
+function handleCityInput(el, type) { const val = el.value.trim(); document.getElementById("btn-search").disabled = val.length === 0; clearTimeout(searchTimer); if (val.length < 2) return; searchTimer = setTimeout(async () => { try { const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(val)}&count=5&language=en`); const data = await res.json(); showAutocomplete(data.results); } catch(e){} }, 300); }
 function showAutocomplete(results) { closeAllLists(); if (!results) return; const list = document.getElementById("autocomplete-list"); results.forEach(res => { const item = document.createElement("div"); item.className = "autocomplete-item"; item.innerHTML = `<strong>${res.name}</strong>, ${res.country}`; item.onclick = (e) => { e.stopPropagation(); document.getElementById("cityInput").value = res.name; myLat = res.latitude; myLon = res.longitude; document.getElementById("loc").textContent = `${res.name}, ${res.country}`; updateAll(); closeAllLists(); }; list.appendChild(item); }); }
 function closeAllLists() { document.getElementById("autocomplete-list").innerHTML = ""; }
 function closeWelcome() { document.getElementById('welcome-overlay').style.display = 'none'; }
-function toggleData() { const h = document.getElementById("hidden-data"); const b = document.getElementById("toggle-data-btn"); const isH = h.style.display !== "block"; h.style.display = isH ? "block" : "none"; b.textContent = isH ? "Show Less Information" : "Show All Information"; }
+function toggleData() { const h = document.getElementById("hidden-data"), b = document.getElementById("toggle-data-btn"); const isH = h.style.display !== "block"; h.style.display = isH ? "block" : "none"; b.textContent = isH ? "Show Less Information" : "Show All Information"; }
 function openModal() { if (myLat === null) return alert("Please set a location first"); document.getElementById("score-pct").textContent = formatProbability(currentTotalScore); document.getElementById("detailModal").style.display = "flex"; }
 function closeModal() { document.getElementById("detailModal").style.display = "none"; }
 async function reverseGeocode(lat, lon) { try { const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&accept-language=en`); const data = await res.json(); document.getElementById("loc").textContent = (data.address.city || data.address.town || "Unknown") + ", " + data.address.country; } catch (e) { document.getElementById("loc").textContent = lat.toFixed(2) + ", " + lon.toFixed(2); } }
+function handleNotifToggle(checkbox) { if (checkbox.checked) { if (myLat === null) { alert("Please set a location first"); checkbox.checked = false; return; } alert(`Notifications have been set.\nTarget area: ${document.getElementById("loc").textContent}`); notifLat = myLat; notifLon = myLon; } }
+function runNotificationChecks() { if (!document.getElementById('notif-toggle').checked) return; const lat = notifLat || myLat, lon = notifLon || myLon; if (lat === null) return; if (currentTotalScore >= 35) { triggerPushNotification("Aurora Alert!", "Aurora viewing chances are high in your area!", "lastNotifyChanceDate"); } }
+function triggerPushNotification(title, message, storageKey) { const today = new Date().toDateString(); if (localStorage.getItem(storageKey) === today) return; if (Notification.permission === "granted") { navigator.serviceWorker.ready.then(reg => { reg.showNotification(title, { body: message, icon: "icon.png" }); localStorage.setItem(storageKey, today); }); } }
+
+/* 実行ループ */
+setInterval(() => { if (myLat !== null) updateAll(); }, 900000);
+setInterval(() => { if (myLat !== null) runNotificationChecks(); }, 60000);
+
 </script>
 </body>
 </html>
