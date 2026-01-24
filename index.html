@@ -385,6 +385,11 @@ async function searchCity() {
             // 2. 入力欄をクリア
             cityInput.value = "";
             document.getElementById("btn-search").disabled = true;
+            
+            // フォーカスを外してキーボードを閉じる
+            cityInput.blur();
+            // 画面のズーム/位置をリセット
+            window.scrollTo({ top: 0, behavior: 'smooth' }); // 面最上部へスムーズに戻る
 
             // 3. リストを物理的に破壊して確実に消す
             const list = document.getElementById("autocomplete-list");
@@ -452,6 +457,11 @@ function showAutocomplete(results) {
             const inputField = document.getElementById("cityInput");
             inputField.value = "";
             document.getElementById("btn-search").disabled = true;
+            
+            // フォーカスを外してキーボードを閉じる
+            inputField.blur();
+            // 画面最上部へスムーズに戻る
+            window.scrollTo({ top: 0, behavior: 'smooth' }); 
 
             // 3. リストを閉じて更新
             closeAllLists();
