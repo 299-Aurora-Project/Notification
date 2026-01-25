@@ -1,10 +1,10 @@
 {
-  "name": "Aurora Forecast Pro",
-  "short_name": "AuroraPro",
+  "name": "Weather Notify PWA",
+  "short_name": "WeatherApp",
   "start_url": "index.html",
   "display": "standalone",
-  "background_color": "#0b132b",
-  "theme_color": "#0b132b",
+  "background_color": "#ffffff",
+  "theme_color": "#007AFF",
   "icons": [
     {
       "src": "icon.png",
