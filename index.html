@@ -1,15 +1,49 @@
-<button onclick="testNotify()">テスト通知を送る</button>
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <link rel="manifest" href="manifest.json">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather PWA</title>
+</head>
+<body>
+    <h2>通知登録テスト</h2>
+    <p>1. ホーム画面に追加して起動してください。</p>
+    <button onclick="subscribe()" style="padding:15px;">通知を許可・登録する</button>
+    <hr>
+    <button onclick="requestTestPush()" style="padding:15px;">自分にテスト通知を送る</button>
 
-<script>
-async function testNotify() {
-    const gasUrl = "https://script.google.com/macros/s/AKfycbzxgnfaz_EVMWkAtT65R1yG2lx2W9THckbIHs94yA4PvkP4V2fkNc0k0Tiju4QmV1Fdvg/exec"; // あなたのGASのURL
-    
-    try {
-        // GASを叩く（GETリクエスト）
-        const response = await fetch(gasUrl, { mode: 'no-cors' });
-        alert("GASへ通知を依頼しました。数秒待ってください。");
-    } catch (e) {
-        alert("エラーが発生しました: " + e);
-    }
-}
-</script>
+    <script>
+        const PUBLIC_KEY = 'BAp0wnGuvaoZk_Q7Bn4H4DWAR2Zdi9juZECl10m290Ff9sAJqiaXepWYvGgbI7WOb9K3O0MOTG8TVi_hg_ov';
+        const GAS_URL = 'https://script.google.com/macros/s/AKfycbzxgnfaz_EVMWkAtT65R1yG2lx2W9THckbIHs94yA4PvkP4V2fkNc0k0Tiju4QmV1Fdvg/exec';
+
+        // サービスワーカー登録
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js');
+        }
+
+        // 通知登録とGASへの保存
+        async function subscribe() {
+            const registration = await navigator.serviceWorker.ready;
+            const sub = await registration.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: PUBLIC_KEY
+            });
+
+            // GASへ情報を送信（保存依頼）
+            await fetch(GAS_URL, {
+                method: 'POST',
+                body: JSON.stringify(sub)
+            });
+            alert("登録完了！スプレッドシートを確認してください。");
+        }
+
+        // テスト送信ボタン
+        async function requestTestPush() {
+            // GETリクエストで自分に通知を送るようGASに依頼
+            await fetch(GAS_URL + "?action=test", { mode: 'no-cors' });
+            alert("送信依頼完了");
+        }
+    </script>
+</body>
+</html>
