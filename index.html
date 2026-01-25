@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Aurora Forecast Pro v. t1.3.1-notificate-test</title>
+<title>Aurora Forecast Pro v. t1.3.1-notificate-test2</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#0b132b">
 <link rel="apple-touch-icon" href="icon.png">
@@ -168,7 +168,7 @@ input:checked + .slider:before { transform: translateX(20px); }
 <div id="home-screen" class="container">
     <div class="header-area">
         <div class="title-row">
-            <h1>🌌 Aurora Forecast Pro<span class="beta-suffix">(beta)</span> <span class="version">v. t1.3.1-notificate-test</span></h1>
+            <h1>🌌 Aurora Forecast Pro<span class="beta-suffix">(beta)</span> <span class="version">v. t1.3.1-notificate-test2</span></h1>
         </div>
         <div class="produce-by">Produce by Shin</div>
     </div>
@@ -327,27 +327,30 @@ function updateAllTimestamps() {
 }
 
 // 通知テストボタンの関数
-// 修正案：Service Workerの準備を待ってから通知を出す
+// 通知テスト用ボタンに割り当てる関数
 async function testNotification() {
-    if (!('serviceWorker' in navigator)) {
-        alert("Service Workerに対応していません");
-        return;
+    // 1. 権限確認
+    if (Notification.permission !== 'granted') {
+        const permission = await Notification.requestPermission();
+        if (permission !== 'granted') {
+            alert("通知が許可されませんでした。設定アプリを確認してください。");
+            return;
+        }
     }
 
-    // 登録状況をチェック
-    const registration = await navigator.serviceWorker.ready;
-    
-    // iOSでの確実な通知発行手順
-    if (registration) {
-        registration.showNotification("オーロラアラート", {
-            body: "通知テストに成功しました！",
-            icon: "icon-192.png", // 実在するアイコンパスか確認
-            badge: "icon-192.png"
-        }).catch(err => {
-            alert("通知発行エラー: " + err);
+    // 2. iOSで最も重要な「ServiceWorkerの準備待ち」
+    try {
+        const reg = await navigator.serviceWorker.ready;
+        
+        // 3. 通知の発行
+        // ※iconをあえて外して最小構成でテストします
+        await reg.showNotification("オーロラアラート", {
+            body: "iPhoneでの通知テスト成功です！",
+            // icon: "icon.png", // ← 以前届いていたなら、ここが404だとiPhoneでは表示されません
+            badge: "icon.png"
         });
-    } else {
-        alert("Service Workerが準備できていません");
+    } catch (err) {
+        alert("エラー発生: " + err.message);
     }
 }
 
@@ -700,6 +703,7 @@ setInterval(() => { if (myLat !== null) runNotificationChecks(); }, 60000);
 </script>
 </body>
 </html>
+
 
 
 
