@@ -215,44 +215,42 @@ if ('serviceWorker' in navigator) {
 }
 
 /* 通知ロジック */
-/* v t1.1.3 */
+/* v t1.1.2 */
 async function testNotification() {
     console.log("Notification button clicked");
     
-    // モバイルのブラウザ内では window.Notification が undefined になることがあります
-    // その場合、ServiceWorkerRegistration からアプローチします
-    const hasServiceWorker = 'serviceWorker' in navigator;
-    const hasNotification = 'Notification' in window;
-
-    if (!hasNotification && !hasServiceWorker) {
-        alert("This browser/OS does not support notifications.");
+    if (!("Notification" in window)) {
+        alert("This browser does not support desktop notification");
         return;
     }
 
-    // iOS/Android 向けの権限リクエスト
-    let permission = Notification.permission;
-    if (permission === "default") {
-        permission = await Notification.requestPermission();
+    // 現在の状態を詳しくログ出力
+    console.log("Current permission state:", Notification.permission);
+
+    // すでに denied の場合、Notification.requestPermission() はダイアログを出さずに即座に denied を返します
+    if (Notification.permission === "denied") {
+        console.error("Permission is already denied. You must reset permission in site settings.");
+        alert("権限が「ブロック」されています。ブラウザのURLバー横にある『鍵マーク』をクリックして、通知設定をリセットしてからページを再読み込みしてください。");
+        return;
     }
 
-    console.log("Permission status:", permission);
+    const permission = await Notification.requestPermission();
+    console.log("Result of requestPermission():", permission);
 
     if (permission === "granted") {
         try {
             const registration = await navigator.serviceWorker.ready;
-            // 24時間以内の重複通知を防ぐため、テストボタンでも日付チェックを無視して強制発信
-            await registration.showNotification("Aurora Forecast Pro", {
-                body: "Mobile notification is working!",
+            await registration.showNotification("Aurora Forecast Test", {
+                body: "Notification system is working correctly!",
                 icon: "icon.png",
-                badge: "icon.png",
-                vibrate: [200, 100, 200] // モバイル用の振動パターン
+                badge: "icon.png"
             });
+            console.log("Notification sent to OS");
         } catch (error) {
-            console.error("Mobile SW Error:", error);
-            alert("Notification failed: Ensure you have added this app to your Home Screen.");
+            console.error("Failed to show notification:", error);
         }
     } else {
-        alert(`Permission ${permission}: Please enable notifications in your OS settings.`);
+        alert(`Permission ${permission}: 通知が許可されませんでした。OSやブラウザ全体の設定を確認してください。`);
     }
 }
 
@@ -460,3 +458,4 @@ function drawAurora(data) { auroraLayer.clearLayers(); data.coordinates.forEach(
 </script>
 </body>
 </html>
+
