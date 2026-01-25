@@ -15,7 +15,7 @@
 
     <script>
         const PUBLIC_KEY = 'BAp0wnGuvaoZk_Q7Bn4H4DWAR2Zdi9juZECl10m290Ff9sAJqiaXepWYvGgbI7WOb9K3O0MOTG8TVi_hg_ovfEg';
-        const GAS_URL = 'https://script.google.com/macros/s/AKfycbzxgnfaz_EVMWkAtT65R1yG2lx2W9THckbIHs94yA4PvkP4V2fkNc0k0Tiju4QmV1Fdvg/exec';
+        const GAS_URL = 'https://script.google.com/macros/s/AKfycbx75bu6TlNrGW3JXtEnvMWhHJBvOoG-Vy2ag5ZzgHUWNX5aWCtZQ5SJOvyweOhaycKYbw/exec';
 
         // サービスワーカー登録
         if ('serviceWorker' in navigator) {
@@ -40,11 +40,12 @@
 
         // テスト送信ボタン
         async function requestTestPush() {
-            // GETリクエストで自分に通知を送るようGASに依頼
-            await fetch(GAS_URL + "?action=test", { mode: 'no-cors' });
-            alert("送信依頼完了");
+        // GASに対してアクションを送る
+        await fetch(GAS_URL + "?action=test", { mode: 'no-cors' });
+        alert("送信依頼をGASに送りました！");
         }
     </script>
 </body>
 </html>
+
 
