@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Aurora Forecast Pro v. t1.3.wip2</title>
+<title>Aurora Forecast Pro v. t1.4.wip1</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#0b132b">
 <link rel="apple-touch-icon" href="icon.png">
@@ -168,7 +168,7 @@ input:checked + .slider:before { transform: translateX(20px); }
 <div id="home-screen" class="container">
     <div class="header-area">
         <div class="title-row">
-            <h1>🌌 Aurora Forecast Pro<span class="beta-suffix">(beta)</span> <span class="version">v. t1.3.wip2</span></h1>
+            <h1>🌌 Aurora Forecast Pro<span class="beta-suffix">(beta)</span> <span class="version">v. t1.4.wip1</span></h1>
         </div>
         <div class="produce-by">Produce by Shin</div>
     </div>
@@ -301,7 +301,7 @@ const FORECAST_URL = "https://services.swpc.noaa.gov/text/3-day-forecast.txt";
 // 生成した公開鍵
 const PUBLIC_KEY = 'BAp0wnGuvaoZk_Q7Bn4H4DWAR2Zdi9juZECl10m290Ff9sAJqiaXepWYvGgbI7WOb9K3O0MOTG8TVi_hg_ovfEg';
 // GASの /exec で終わるURL
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbwvkzt9ojhEIF1vkFTwHo39E9AG8ScjLXBzRflpqA3eYPs9eN7-WRQd_bUx3gzgalBuHA/exec'; 
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbzPPBpwQwJZfx0Yc88KKhzUO5e4xMJEATYf8SP98qtytvC6yg2n84nxJH4W9PLYGXNh/exec'; 
 // ----------------------
 
 let myLat = null; let myLon = null; 
@@ -685,37 +685,66 @@ function closeModal() { document.getElementById("detailModal").style.display = "
 async function reverseGeocode(lat, lon) { try { const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&accept-language=en`); const data = await res.json(); document.getElementById("loc").textContent = (data.address.city || data.address.town || "Unknown") + ", " + data.address.country; } catch (e) { document.getElementById("loc").textContent = lat.toFixed(2) + ", " + lon.toFixed(2); } }
 
 /* Notificationスイッチ */
-function handleNotifToggle(checkbox) {
+// 「Notification」スイッチが切り替わった時に、現在の緯度・経度とスイッチの状態をセットでGASに送信するようにします。
+// asyncを付けて非同期関数にします
+async function handleNotifToggle(checkbox) {
     const targetDisplay = document.getElementById("target-area-display");
     const targetName = document.getElementById("target-area-name");
+    const isEnabled = checkbox.checked;
 
-    if (checkbox.checked) {
+    // --- 1. UIの即時更新（描画を崩さないために最優先） ---
+    if (isEnabled) {
         if (myLat === null) {
             document.getElementById('welcome-overlay').style.display = 'flex';
             checkbox.checked = false;
             targetDisplay.style.display = "none";
             return;
         }
-        
-        // 1. まず表示を更新（スイッチのON表示とTarget areaの表示）
         const currentLocation = document.getElementById("loc").textContent;
         targetName.textContent = currentLocation;
         targetDisplay.style.display = "block";
-        
         notifLat = myLat;
         notifLon = myLon;
-
-        // 2. わずかに遅らせて alert を出すことで、スイッチの描画を優先させる
-        setTimeout(() => {
-            alert(`Notifications have been set.\nTarget area: ${currentLocation}`);
-        }, 15);
-        
     } else {
         targetDisplay.style.display = "none";
-        setTimeout(() => {
-            alert(`Notifications have been cancelled.`);
-        }, 15);
     }
+
+    // --- 2. 裏側でGASにデータを送信（ユーザーを待たせない） ---
+    // 通信に失敗してもスイッチが戻らないよう、try-catchで囲みます
+    try {
+        const registration = await navigator.serviceWorker.ready;
+        const sub = await registration.pushManager.getSubscription();
+
+        if (sub) {
+            const payload = {
+                endpoint: sub.endpoint,
+                keys: {
+                    p256dh: btoa(String.fromCharCode.apply(null, new Uint8Array(sub.getKey('p256dh')))),
+                    auth: btoa(String.fromCharCode.apply(null, new Uint8Array(sub.getKey('auth'))))
+                },
+                lat: myLat,
+                lon: myLon,
+                enabled: isEnabled
+            };
+
+            // await fetch を使うが、この後にはUI処理がないので描画には響かない
+            await fetch(GAS_URL, {
+                method: 'POST',
+                body: JSON.stringify(payload)
+            });
+        }
+    } catch (e) {
+        console.error("GASへの同期に失敗しました:", e);
+        // ここで alert を出すと描画が止まるので、console.log に留めるのがスムーズです
+    }
+
+    // --- 3. 最後にアラート（以前の15ms遅延を継承） ---
+    setTimeout(() => {
+        const msg = isEnabled ? 
+            `Notifications have been set.\nTarget area: ${document.getElementById("loc").textContent}` : 
+            `Notifications have been cancelled.`;
+        alert(msg);
+    }, 50); // 通信時間を考慮して少しだけ長めに設定
 }
 
 function runNotificationChecks() { if (!document.getElementById('notif-toggle').checked) return; const lat = notifLat || myLat, lon = notifLon || myLon; if (lat === null) return; if (currentTotalScore >= 35) { triggerPushNotification("Aurora Alert!", "Aurora viewing chances are high in your area!", "lastNotifyChanceDate"); } }
