@@ -368,9 +368,9 @@ async function testNotification() {
     if (permission === "granted") {
         const isSaved = await subscribeUser();
         if (isSaved) {
-            // 2. 保存に成功したらGASに「自分へのテスト通知」を依頼する
+            // 2. 保存に成功したらGASに「自分へのテスト通知」を依頼する(コメントアウト中)
             await fetch(GAS_URL + "?action=test", { mode: 'no-cors' });
-            alert("Sent test request to GAS server!");
+            // alert("Sent test request to GAS server!");
         } else {
             alert("Failed to save registration to Spreadsheet.");
         }
@@ -757,3 +757,4 @@ setInterval(() => { if (myLat !== null) runNotificationChecks(); }, 60000);
 </script>
 </body>
 </html>
+
