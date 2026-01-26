@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Aurora Forecast Pro v. t1.3.0</title>
+<title>Aurora Forecast Pro v. t1.3.wip1</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#0b132b">
 <link rel="apple-touch-icon" href="icon.png">
@@ -168,7 +168,7 @@ input:checked + .slider:before { transform: translateX(20px); }
 <div id="home-screen" class="container">
     <div class="header-area">
         <div class="title-row">
-            <h1>🌌 Aurora Forecast Pro<span class="beta-suffix">(beta)</span> <span class="version">v. t1.3.0</span></h1>
+            <h1>🌌 Aurora Forecast Pro<span class="beta-suffix">(beta)</span> <span class="version">v. t1.3.wip1</span></h1>
         </div>
         <div class="produce-by">Produce by Shin</div>
     </div>
@@ -357,24 +357,25 @@ function updateAllTimestamps() {
     });
 }
 
-// --- ★通知登録（スプレッドシートへの保存）関数を追加★ ---
-async function subscribeUser() {
-    try {
-        const registration = await navigator.serviceWorker.ready;
-        const sub = await registration.pushManager.subscribe({
-            userVisibleOnly: true,
-            applicationServerKey: PUBLIC_KEY
-        });
+// --- ★テスト通知ボタンの機能を書き換え★ ---
+async function testNotification() {
+    // 1. まず通知の許可とスプレッドシートへの保存を行う
+    let permission = Notification.permission;
+    if (permission !== "granted") {
+        permission = await Notification.requestPermission();
+    }
 
-        // GASへ送信してスプレッドシートに保存
-        await fetch(GAS_URL, {
-            method: 'POST',
-            body: JSON.stringify(sub)
-        });
-        return true;
-    } catch (e) {
-        console.error("Subscription failed:", e);
-        return false;
+    if (permission === "granted") {
+        const isSaved = await subscribeUser();
+        if (isSaved) {
+            // 2. 保存に成功したらGASに「自分へのテスト通知」を依頼する
+            await fetch(GAS_URL + "?action=test", { mode: 'no-cors' });
+            alert("Sent test request to GAS server!");
+        } else {
+            alert("Failed to save registration to Spreadsheet.");
+        }
+    } else {
+        alert("Notification permission denied.");
     }
 }
 
