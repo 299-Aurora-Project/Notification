@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Aurora Forecast Pro v. t1.4.wip</title>
+<title>Aurora Forecast Pro v. t1.4.wip7</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#0b132b">
 <link rel="apple-touch-icon" href="icon.png">
@@ -168,7 +168,7 @@ input:checked + .slider:before { transform: translateX(20px); }
 <div id="home-screen" class="container">
     <div class="header-area">
         <div class="title-row">
-            <h1>🌌 Aurora Forecast Pro<span class="beta-suffix">(beta)</span> <span class="version">v. t1.4.wip6</span></h1>
+            <h1>🌌 Aurora Forecast Pro<span class="beta-suffix">(beta)</span> <span class="version">v. t1.4.wip7</span></h1>
         </div>
         <div class="produce-by">Produce by Shin</div>
     </div>
@@ -301,7 +301,7 @@ const FORECAST_URL = "https://services.swpc.noaa.gov/text/3-day-forecast.txt";
 // 生成した公開鍵
 const PUBLIC_KEY = 'BAp0wnGuvaoZk_Q7Bn4H4DWAR2Zdi9juZECl10m290Ff9sAJqiaXepWYvGgbI7WOb9K3O0MOTG8TVi_hg_ovfEg';
 // GASの /exec で終わるURL
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbwL0mxzXhW8_eC-iFo5mt-ZCBouYLONIRV-fAVD16-P8KR52do-gKtzbJkYtWEAumlvXw/exec'; 
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbwFNZCOBW_pXgmcPhKroVWk1YmNL_M9M_mT_ISoaJJIiLGI_RoBaveIeDJ11WvOu9fzAA/exec'; 
 // ----------------------
 
 let myLat = null; let myLon = null; 
@@ -757,6 +757,7 @@ setInterval(() => { if (myLat !== null) runNotificationChecks(); }, 60000);
 </script>
 </body>
 </html>
+
 
 
 
